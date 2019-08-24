@@ -131,9 +131,9 @@ void main(void)
         print(self.getGlInfo())
         # create context and make it current
         self.context.create()
-        # surface = QSurface(QSurface.OpenGLSurface)
-        # self.context.makeCurrent(surface)
         self.context.aboutToBeDestroyed.connect(self.cleanUpGl)
+            
+        # initialize functions
         funcs = self.context.functions()
         funcs.initializeOpenGLFunctions()
         funcs.glClearColor(1, 1, 1, 1)

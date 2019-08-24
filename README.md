@@ -9,11 +9,11 @@ commands on the terminal.
 
 - Create a virtual env with conda `conda create -n pyside-opengl-tuto`
 
-- Activate your virtual env `conda actiate pyside-opengl-tuto`
+- Activate your virtual env `conda activate pyside-opengl-tuto`
 
 - Install python `conda install -c conda-forge python=3`
 
-- Install `qt` `conda install -c conda-forge qt`
+- Install `pyside2` and `shiboken2` `pip install PySide2==5.11 shiboken2==5.12`
 
 - Install PyOpenGL_accelerate `conda install -c anaconda pyopengl-accelerate`
 
@@ -46,3 +46,10 @@ The tutorials are linear in nature, so you can use it alongside with
 other learning ressources for OpenGL.
 
 If you feel like you can contribute to tutorials, they are always welcomed.
+
+
+## List of Tutorials
+
+As stated in the description the list is progressive.
+
+1. [Hello Triangle](./tutorials/01-triangle/TriangleTutorial.ipynb)
