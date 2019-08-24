@@ -28,8 +28,7 @@ setuptools.setup(
     test_suite="tests",
     install_requires=[
         "numpy",
-        "pillow",
-        "PySide2",
+        "jupyter"
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
