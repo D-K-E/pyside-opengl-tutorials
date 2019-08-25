@@ -1,4 +1,5 @@
 # Author: Kaan Eraslan
+# purpose draw a rectangle on window
 
 import numpy as np
 import os
@@ -24,6 +25,7 @@ from PySide2.QtCore import QCoreApplication
 
 from PySide2.shiboken2 import VoidPtr
 
+
 try:
     from OpenGL import GL as pygl
 except ImportError:
@@ -37,14 +39,16 @@ except ImportError:
     sys.exit(1)
 
 
-class TriangleGL(QOpenGLWidget):
+class CubeGL(QOpenGLWidget):
+    "Cube gl widget"
+
     def __init__(self, parent=None):
         QOpenGLWidget.__init__(self, parent)
 
         # shaders etc
-        triangleTutoDir = os.path.dirname(__file__)
-        shaderDir = os.path.join(triangleTutoDir, "shaders")
-        availableShaders = ["triangle"]
+        cubeTutoDir = os.path.dirname(__file__)
+        shaderDir = os.path.join(cubeTutoDir, "shaders")
+        availableShaders = ["cube"]
         self.shaders = {
             name: {
                 "fragment": os.path.join(shaderDir, name + ".frag"),
@@ -59,16 +63,55 @@ class TriangleGL(QOpenGLWidget):
         self.vbo = QOpenGLBuffer(QOpenGLBuffer.VertexBuffer)
         self.program = QOpenGLShaderProgram()
 
-        # some vertex data for corners of triangle
-        self.vertexData = np.array(
-            [-0.5, -0.5, 0.0,  # x, y, z
-             0.5, -0.5, 0.0,  # x, y, z
-             0.0, 0.5, 0.0],  # x, y, z
+        # vertex data
+        self.vertexData = np.array([
+            -0.5, -0.5, -0.5,
+            0.5, -0.5, -0.5,
+            0.5,  0.5, -0.5,
+            0.5,  0.5, -0.5,
+            -0.5,  0.5, -0.5,
+            -0.5, -0.5, -0.5,
+
+            -0.5, -0.5,  0.5,
+            0.5, -0.5,  0.5,
+            0.5,  0.5,  0.5,
+            0.5,  0.5,  0.5,
+            -0.5,  0.5,  0.5,
+            -0.5, -0.5,  0.5,
+
+            -0.5,  0.5,  0.5,
+            -0.5,  0.5, -0.5,
+            -0.5, -0.5, -0.5,
+            -0.5, -0.5, -0.5,
+            -0.5, -0.5,  0.5,
+            -0.5,  0.5,  0.5,
+
+            0.5,  0.5,  0.5,
+            0.5,  0.5, -0.5,
+            0.5, -0.5, -0.5,
+            0.5, -0.5, -0.5,
+            0.5, -0.5,  0.5,
+            0.5,  0.5,  0.5,
+
+            -0.5, -0.5, -0.5,
+            0.5, -0.5, -0.5,
+            0.5, -0.5,  0.5,
+            0.5, -0.5,  0.5,
+            -0.5, -0.5,  0.5,
+            -0.5, -0.5, -0.5,
+
+            -0.5,  0.5, -0.5,
+            0.5,  0.5, -0.5,
+            0.5,  0.5,  0.5,
+            0.5,  0.5,  0.5,
+            -0.5,  0.5,  0.5,
+            -0.5,  0.5, -0.5,
+        ],
             dtype=ctypes.c_float
         )
-        # triangle color
-        self.triangleColor = QVector4D(0.5, 0.5, 0.0, 0.0)  # yellow triangle
-        # notice the correspondance the vec4 of fragment shader 
+        # cube color
+        self.cubeColor = QVector4D(0.0, 0.0, 0.0, 0.0)  # black cube
+        # notice the correspondance the vec4 of fragment shader
         # and our choice here
 
     def loadShader(self,
@@ -116,78 +159,6 @@ class TriangleGL(QOpenGLWidget):
         )
         return info
 
-    def initializeGL(self):
-        print('gl initial')
-        print(self.getGlInfo())
-        # create context and make it current
-        self.context.create()
-        self.context.aboutToBeDestroyed.connect(self.cleanUpGl)
-            
-        # initialize functions
-        funcs = self.context.functions()
-        funcs.initializeOpenGLFunctions()
-        funcs.glClearColor(1, 1, 1, 1)
-
-        # deal with shaders
-        shaderName = "triangle"
-        vshader = self.loadVertexShader(shaderName)
-        fshader = self.loadFragmentShader(shaderName)
-
-        # creating shader program
-        self.program = QOpenGLShaderProgram(self.context)
-        self.program.addShader(vshader)  # adding vertex shader
-        self.program.addShader(fshader)  # adding fragment shader
-
-        # bind attribute to a location
-        self.program.bindAttributeLocation("aPos", 0)
-
-        # link shader program
-        isLinked = self.program.link()
-        print("shader program is linked: ", isLinked)
-
-        # bind the program
-        self.program.bind()
-
-        # specify uniform value
-        colorLoc = self.program.uniformLocation("color")
-        self.program.setUniformValue(colorLoc,
-                                     self.triangleColor)
-
-        # self.useShader("triangle")
-
-        # deal with vao and vbo
-
-        # create vao and vbo
-
-        # vao
-        isVao = self.vao.create()
-        vaoBinder = QOpenGLVertexArrayObject.Binder(self.vao)
-
-        # vbo
-        isVbo = self.vbo.create()
-        isBound = self.vbo.bind()
-
-        # check if vao and vbo are created
-        print('vao created: ', isVao)
-        print('vbo created: ', isVbo)
-
-        floatSize = ctypes.sizeof(ctypes.c_float)
-
-        # allocate space on buffer
-        self.vbo.allocate(self.vertexData.tobytes(),
-                          floatSize * self.vertexData.size)
-        funcs.glEnableVertexAttribArray(0)
-        nullptr = VoidPtr(0)
-        funcs.glVertexAttribPointer(0,
-                                    3,
-                                    int(pygl.GL_FLOAT),
-                                    int(pygl.GL_FALSE),
-                                    3 * floatSize,
-                                    nullptr)
-        self.vbo.release()
-        self.program.release()
-        vaoBinder = None
-
     def cleanUpGl(self):
         "Clean up everything"
         self.context.makeCurrent()
@@ -206,13 +177,114 @@ class TriangleGL(QOpenGLWidget):
         funcs = self.context.functions()
 
         # clean up what was drawn
-        funcs.glClear(pygl.GL_COLOR_BUFFER_BIT)
+        funcs.glClear(pygl.GL_COLOR_BUFFER_BIT | pygl.GL_DEPTH_BUFFER_BIT)
 
         # actual drawing
-        vaoBinder = QOpenGLVertexArrayObject.Binder(self.vao)
         self.program.bind()
-        funcs.glDrawArrays(pygl.GL_TRIANGLES,  # mode
-                           0,  # first
-                           3)  # count
+        vaoBinder = QOpenGLVertexArrayObject.Binder(self.vao)
+
+        funcs.glDrawElements(pygl.GL_TRIANGLES,  # mode
+                             6,  # count
+                             pygl.GL_UNSIGNED_INT,  # type
+                             self.vertexIndices.tobytes()  # indices
+                             )
+
+        self.program.release()
+        vaoBinder = None
+
+    def initializeGL(self):
+        print('gl initial')
+        print(self.getGlInfo())
+        # create context and make it current
+        self.context.create()
+        self.context.aboutToBeDestroyed.connect(self.cleanUpGl)
+
+        # initialize functions
+        funcs = self.context.functions()
+        funcs.initializeOpenGLFunctions()
+        funcs.glClearColor(0.1, 0.4, 0, 0)
+        funcs.glEnable(pygl.GL_DEPTH_TEST)
+
+        # deal with shaders
+        shaderName = "cube"
+        vshader = self.loadVertexShader(shaderName)
+        fshader = self.loadFragmentShader(shaderName)
+
+        # creating shader program
+        self.program = QOpenGLShaderProgram(self.context)
+        self.program.addShader(vshader)  # adding vertex shader
+        self.program.addShader(fshader)  # adding fragment shader
+
+        # bind attribute to a location
+        self.program.bindAttributeLocation("aPos", 0)
+
+        # link shader program
+        isLinked = self.program.link()
+        print("shader program is linked: ", isLinked)
+
+        # bind the program
+        self.program.bind()
+
+        # specify uniform values in shader program
+        uniformVals = {
+            "view": "",
+            "model": "",
+            "projection": "",
+            "objectColor": QVector3D(1.0, 0.5, 0.3),
+            "lightColor": QVector3D(1.0, 1.0, 1.0),
+        }
+
+        # Object Color
+        objColorLoc = self.program.uniformLocation("objectColor")
+        self.program.setUniformValue(colorLoc,
+                                     self.rectangleColor)
+
+        # self.useShader("triangle")
+
+        # deal with vao and vbo
+
+        # create vao, vbo and ebo
+
+        # vao
+        isVao = self.vao.create()
+        vaoBinder = QOpenGLVertexArrayObject.Binder(self.vao)
+
+        # vbo
+        isVbo = self.vbo.create()
+        isVboBound = self.vbo.bind()
+
+        # ebo
+        isEbo = self.ebo.create()
+        isEboBound = self.ebo.bind()
+
+        # check if vao and vbo are created
+        print('vao created: ', isVao)
+        print('vbo created: ', isVbo)
+        print('ebo created: ', isEbo)
+
+        # check if all are bound
+        print("vbo bound: ", isVboBound)
+        print("ebo bound: ", isEboBound)
+
+        floatSize = ctypes.sizeof(ctypes.c_float)
+        uintSize = ctypes.sizeof(ctypes.c_uint)
+
+        # allocate space on vbo buffer
+        self.vbo.allocate(self.vertexData.tobytes(),
+                          floatSize * self.vertexData.size)
+
+        # allocate space on ebo buffer for index
+        self.ebo.allocate(self.vertexIndices.tobytes(),
+                          uintSize * self.vertexIndices.size)
+
+        funcs.glEnableVertexAttribArray(0)
+        nullptr = VoidPtr(0)
+        funcs.glVertexAttribPointer(0,
+                                    3,
+                                    int(pygl.GL_FLOAT),
+                                    int(pygl.GL_FALSE),
+                                    3 * floatSize,
+                                    nullptr)
+        self.vbo.release()
         self.program.release()
         vaoBinder = None
