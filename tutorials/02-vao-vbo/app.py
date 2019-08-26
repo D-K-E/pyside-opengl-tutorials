@@ -2,7 +2,7 @@
 # license: see, LICENSE
 
 from PySide2 import QtWidgets, QtCore, QtGui
-from gltriangle import TriangleGL
+from glshader import TriangleGL
 import sys
 
 def createSlider():

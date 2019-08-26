@@ -1,7 +1,7 @@
 # Author: Kaan Eraslan
 
 from PySide2 import QtWidgets, QtCore, QtGui
-from glrectangle import RectangeGL
+from glcube import CubeGL
 import sys
 
 
@@ -21,7 +21,7 @@ class AppWindow(QtWidgets.QMainWindow):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.glWidget = RectangeGL()
+        self.glWidget = CubeGL()
         self.xSlider = createSlider()
         self.ySlider = createSlider()
         self.zSlider = createSlider()
