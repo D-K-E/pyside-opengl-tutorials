@@ -13,7 +13,7 @@ commands on the terminal.
 
 - Install python `conda install -c conda-forge python=3`
 
-- Install `pyside2` and `shiboken2` `pip install PySide2==5.11 shiboken2==5.12`
+- Install requirements with pip `pip install -r requirements.txt`
 
 - Install PyOpenGL_accelerate `conda install -c anaconda pyopengl-accelerate`
 
