@@ -11,7 +11,7 @@ with open("LICENSE", "r", encoding="utf-8") as f:
     license_str = f.read()
 
 setuptools.setup(
-    name="pyside-opengl-tutorials",
+    name="PysideOpenGLTutorials",
     version="0.1",
     author='Kaan Eraslan',
     python_requires='>=3.5.0',
@@ -23,7 +23,7 @@ setuptools.setup(
     url="https://github.com/D-K-E/pyside-opengl-tutorials",
     packages=setuptools.find_packages(
         exclude=["tests", "*.tests", "*.tests.*", "tests.*",
-                 "docs", ".gitignore", "README.md"]
+                 "docs", ".gitignore", "README.md"],
     ),
     test_suite="tests",
     install_requires=[

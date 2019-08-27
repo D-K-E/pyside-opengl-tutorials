@@ -5,16 +5,12 @@ import os
 import sys
 import ctypes
 
-from PySide2 import QtWidgets, QtCore, QtGui
-from PySide2.QtGui import QVector3D
 from PySide2.QtGui import QOpenGLVertexArrayObject
 from PySide2.QtGui import QOpenGLBuffer
 from PySide2.QtGui import QOpenGLShaderProgram
 from PySide2.QtGui import QOpenGLShader
 from PySide2.QtGui import QOpenGLContext
-from PySide2.QtGui import QMatrix4x4
 from PySide2.QtGui import QVector4D
-from PySide2.QtGui import QColor
 
 from PySide2.QtWidgets import QApplication
 from PySide2.QtWidgets import QMessageBox
@@ -43,7 +39,9 @@ class TriangleGL(QOpenGLWidget):
 
         # shaders etc
         triangleTutoDir = os.path.dirname(__file__)
-        shaderDir = os.path.join(triangleTutoDir, "shaders")
+        trianglePardir = os.path.join(triangleTutoDir, os.pardir)
+        mediaDir = os.path.join(trianglePardir, "media")
+        shaderDir = os.path.join(mediaDir, "shaders")
         availableShaders = ["triangle", "triangle2"]
         self.shaders = {
             name: {
@@ -162,7 +160,7 @@ class TriangleGL(QOpenGLWidget):
         # specify uniform value
         colorLoc = self.program1.uniformLocation("color")
         self.program1.setUniformValue(colorLoc,
-                                     self.triangleColor1)
+                                      self.triangleColor1)
 
         # second shader
         shaderName = "triangle2"
@@ -187,7 +185,7 @@ class TriangleGL(QOpenGLWidget):
         # specify uniform value
         colorLoc = self.program2.uniformLocation("color")
         self.program2.setUniformValue(colorLoc,
-                                     self.triangleColor2)
+                                      self.triangleColor2)
 
         # self.useShader("triangle")
 
@@ -287,4 +285,3 @@ class TriangleGL(QOpenGLWidget):
                            3)  # count
         vaoBinder = None
         self.program2.release()
-

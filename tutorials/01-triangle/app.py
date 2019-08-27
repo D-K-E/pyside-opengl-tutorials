@@ -1,9 +1,10 @@
 # author: Kaan Eraslan
 # license: see, LICENSE
 
-from PySide2 import QtWidgets, QtCore, QtGui
+from PySide2 import QtWidgets, QtCore
 from gltriangle import TriangleGL
 import sys
+
 
 def createSlider():
     slider = QtWidgets.QSlider(QtCore.Qt.Vertical)

@@ -1,9 +1,9 @@
-# Author: Kaan Eraslan
+# author: Kaan Eraslan
+# license: see, LICENSE
 
-from PySide2 import QtWidgets, QtCore, QtGui
-from glcube import CubeGL
+from PySide2 import QtWidgets, QtCore
+from glrectangle import RectangleGL
 import sys
-
 
 def createSlider():
     slider = QtWidgets.QSlider(QtCore.Qt.Vertical)
@@ -21,7 +21,7 @@ class AppWindow(QtWidgets.QMainWindow):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.glWidget = CubeGL()
+        self.glWidget = RectangleGL()
         self.xSlider = createSlider()
         self.ySlider = createSlider()
         self.zSlider = createSlider()

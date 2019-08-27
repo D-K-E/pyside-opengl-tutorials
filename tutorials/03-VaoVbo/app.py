@@ -1,7 +1,7 @@
 # author: Kaan Eraslan
 # license: see, LICENSE
 
-from PySide2 import QtWidgets, QtCore, QtGui
+from PySide2 import QtWidgets, QtCore
 from glshader import TriangleGL
 import sys
 

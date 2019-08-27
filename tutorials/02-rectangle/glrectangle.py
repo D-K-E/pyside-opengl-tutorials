@@ -1,4 +1,4 @@
-# Author: Kaan Eraslan
+# author: Kaan Eraslan
 
 import numpy as np
 import os
@@ -20,6 +20,7 @@ from PySide2.QtCore import QCoreApplication
 
 from PySide2.shiboken2 import VoidPtr
 
+
 try:
     from OpenGL import GL as pygl
 except ImportError:
@@ -33,18 +34,19 @@ except ImportError:
     sys.exit(1)
 
 
-class TriangleGL(QOpenGLWidget):
-    def __init__(self, parent=None):
-        QOpenGLWidget.__init__(self, parent)
+class RectangleGL(QOpenGLWidget):
+    "Texture loading opengl widget"
 
-        # shaders etc
-        triangleTutoDir = os.path.dirname(__file__)
-        trianglePardir = os.path.join(triangleTutoDir, os.pardir)
-        trianglePardir = os.path.realpath(trianglePardir)
-        mediaDir = os.path.join(trianglePardir, "media")
+    def __init__(self, parent=None):
+        "Constructor"
+        QOpenGLWidget.__init__(self, parent)
+        tutoTutoDir = os.path.dirname(__file__)
+        tutoPardir = os.path.join(tutoTutoDir, os.pardir)
+        tutoPardir = os.path.realpath(tutoPardir)
+        mediaDir = os.path.join(tutoPardir, "media")
         shaderDir = os.path.join(mediaDir, "shaders")
-        print(shaderDir)
-        availableShaders = ["triangle"]
+        #
+        availableShaders = ["rectangle", "triangle"]
         self.shaders = {
             name: {
                 "fragment": os.path.join(shaderDir, name + ".frag"),
@@ -55,21 +57,24 @@ class TriangleGL(QOpenGLWidget):
 
         # opengl data related
         self.context = QOpenGLContext()
+        self.program = QOpenGLShaderProgram()
         self.vao = QOpenGLVertexArrayObject()
         self.vbo = QOpenGLBuffer(QOpenGLBuffer.VertexBuffer)
-        self.program = QOpenGLShaderProgram()
+        self.indices = np.array([
+            0, 1, 3,  # first triangle
+            1, 2, 3  # second triangle
+        ], dtype=ctypes.c_uint)
 
-        # some vertex data for corners of triangle
-        self.vertexData = np.array(
-            [-0.5, -0.5, 0.0,  # x, y, z
-             0.5, -0.5, 0.0,  # x, y, z
-             0.0, 0.5, 0.0],  # x, y, z
-            dtype=ctypes.c_float
-        )
-        # triangle color
-        self.triangleColor = QVector4D(0.5, 0.5, 0.0, 0.0)  # yellow triangle
-        # notice the correspondance the vec4 of fragment shader 
-        # and our choice here
+        # vertex data of the panel that would hold the image
+        self.vertexData = np.array([
+            # viewport position || colors           ||   texture coords
+            0.5,  0.5,  0.0,  # top right
+            0.5,  -0.5, 0.0,  # bottom right
+            -0.5, -0.5, 0.0,  # bottom left
+            -0.5, 0.5,  0.0,  # top left
+        ], dtype=ctypes.c_float)
+
+        self.rectColor = QVector4D(0.0, 1.0, 1.0, 0.0)
 
     def loadShader(self,
                    shaderName: str,
@@ -116,84 +121,12 @@ class TriangleGL(QOpenGLWidget):
         )
         return info
 
-    def initializeGL(self):
-        print('gl initial')
-        print(self.getGlInfo())
-        # create context and make it current
-        self.context.create()
-        self.context.aboutToBeDestroyed.connect(self.cleanUpGl)
-            
-        # initialize functions
-        funcs = self.context.functions()
-        funcs.initializeOpenGLFunctions()
-        funcs.glClearColor(1, 1, 1, 1)
-
-        # deal with shaders
-        shaderName = "triangle"
-        vshader = self.loadVertexShader(shaderName)
-        fshader = self.loadFragmentShader(shaderName)
-
-        # creating shader program
-        self.program = QOpenGLShaderProgram(self.context)
-        self.program.addShader(vshader)  # adding vertex shader
-        self.program.addShader(fshader)  # adding fragment shader
-
-        # bind attribute to a location
-        self.program.bindAttributeLocation("aPos", 0)
-
-        # link shader program
-        isLinked = self.program.link()
-        print("shader program is linked: ", isLinked)
-
-        # bind the program
-        self.program.bind()
-
-        # specify uniform value
-        colorLoc = self.program.uniformLocation("color")
-        self.program.setUniformValue(colorLoc,
-                                     self.triangleColor)
-
-        # self.useShader("triangle")
-
-        # deal with vao and vbo
-
-        # create vao and vbo
-
-        # vao
-        isVao = self.vao.create()
-        vaoBinder = QOpenGLVertexArrayObject.Binder(self.vao)
-
-        # vbo
-        isVbo = self.vbo.create()
-        isBound = self.vbo.bind()
-
-        # check if vao and vbo are created
-        print('vao created: ', isVao)
-        print('vbo created: ', isVbo)
-
-        floatSize = ctypes.sizeof(ctypes.c_float)
-
-        # allocate space on buffer
-        self.vbo.allocate(self.vertexData.tobytes(),
-                          floatSize * self.vertexData.size)
-        funcs.glEnableVertexAttribArray(0)
-        nullptr = VoidPtr(0)
-        funcs.glVertexAttribPointer(0,
-                                    3,
-                                    int(pygl.GL_FLOAT),
-                                    int(pygl.GL_FALSE),
-                                    3 * floatSize,
-                                    nullptr)
-        self.vbo.release()
-        self.program.release()
-        vaoBinder = None
-
     def cleanUpGl(self):
         "Clean up everything"
         self.context.makeCurrent()
-        self.vbo.destroy()
         del self.program
         self.program = None
+        self.vbo.release()
         self.doneCurrent()
 
     def resizeGL(self, width: int, height: int):
@@ -201,18 +134,93 @@ class TriangleGL(QOpenGLWidget):
         funcs = self.context.functions()
         funcs.glViewport(0, 0, width, height)
 
-    def paintGL(self):
-        "drawing loop"
-        funcs = self.context.functions()
+    def initializeGL(self):
+        "Initialize opengl "
+        print('gl initial')
+        print(self.getGlInfo())
+        # create context and make it current
+        self.context.create()
+        self.context.aboutToBeDestroyed.connect(self.cleanUpGl)
 
+        # initialize functions
+        funcs = self.context.functions()
+        funcs.initializeOpenGLFunctions()
+        funcs.glClearColor(1, 1, 1, 1)
+
+        # shader
+        shaderName = "triangle"
+        vshader = self.loadVertexShader(shaderName)
+        fshader = self.loadFragmentShader(shaderName)
+
+        # create shader program
+        self.program = QOpenGLShaderProgram(self.context)
+        self.program.addShader(vshader)
+        self.program.addShader(fshader)
+
+        # bind attribute location
+        self.program.bindAttributeLocation("aPos", 0)
+
+        # link shader program
+        isLinked = self.program.link()
+        print("shader program is linked: ", isLinked)
+
+        # activate shader program to set uniform an attribute values
+        self.program.bind()
+
+        # specify uniform value
+        colorLoc = self.program.uniformLocation("color")
+        self.program.setUniformValue(colorLoc,
+                                     self.rectColor)
+
+
+        # vao, vbo, texture
+        # vao
+        isVao = self.vao.create()
+        vaoBinder = QOpenGLVertexArrayObject.Binder(self.vao)
+
+        # vbo
+        isVbo = self.vbo.create()
+        isVboBound = self.vbo.bind()
+
+        floatSize = ctypes.sizeof(ctypes.c_float)
+
+        # allocate vbo
+        self.vbo.allocate(self.vertexData.tobytes(),
+                          floatSize * self.vertexData.size)
+
+        print("vao created: ", isVao)
+        print("vbo created: ", isVbo)
+        print("vbo bound: ", isVboBound)
+
+        # dealing with attributes
+        # vertex array position
+        funcs.glVertexAttribPointer(0,
+                                    3,
+                                    int(pygl.GL_FLOAT),
+                                    int(pygl.GL_FALSE),
+                                    3 * floatSize,
+                                    VoidPtr(0))
+        funcs.glEnableVertexAttribArray(0)
+        
+        self.vbo.release()
+        vaoBinder = None
+
+    def paintGL(self):
+        "paint gl"
+        funcs = self.context.functions()
         # clean up what was drawn
         funcs.glClear(pygl.GL_COLOR_BUFFER_BIT)
 
-        # actual drawing
+        # bind texture
         vaoBinder = QOpenGLVertexArrayObject.Binder(self.vao)
         self.program.bind()
-        funcs.glDrawArrays(pygl.GL_TRIANGLES,  # mode
-                           0,  # first
-                           3)  # count
-        self.program.release()
+
+        # draw stuff
+        funcs.glDrawElements(
+            pygl.GL_TRIANGLES,
+            self.indices.size,
+            pygl.GL_UNSIGNED_INT,
+            self.indices.tobytes())
+            # VoidPtr(self.indices.tobytes() * ctypes.sizeof(ctypes.c_uint)))
         vaoBinder = None
+        self.program.release()
