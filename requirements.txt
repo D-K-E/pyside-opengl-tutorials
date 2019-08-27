@@ -1,0 +1,3 @@
+jupyter
+PySide2 == 5.11
+shiboken2 == 5.12
