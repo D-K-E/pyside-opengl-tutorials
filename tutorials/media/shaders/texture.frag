@@ -1,4 +1,4 @@
-varying mediump vec2 TexCoord;
+varying highp vec2 TexCoord;
 
 uniform sampler2D myTexture;
 
