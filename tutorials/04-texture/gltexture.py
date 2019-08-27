@@ -181,11 +181,7 @@ class TextureGL(QOpenGLWidget):
 
         # activate shader program to set uniform an attribute values
         self.program.bind()
-
-        # vao, vbo, texture
-        # vao
-        isVao = self.vao.create()
-        vaoBinder = QOpenGLVertexArrayObject.Binder(self.vao)
+        self.program.setUniformValue('myTexture', 0)
 
         # vbo
         isVbo = self.vbo.create()
@@ -196,32 +192,6 @@ class TextureGL(QOpenGLWidget):
         # allocate vbo
         self.vbo.allocate(self.vertexData.tobytes(),
                           floatSize * self.vertexData.size)
-
-        print("vao created: ", isVao)
-        print("vbo created: ", isVbo)
-        print("vbo bound: ", isVboBound)
-
-        nullptr = VoidPtr(0)
-
-        # dealing with attributes
-        # vertex array position
-        funcs.glVertexAttribPointer(0,
-                                    3,
-                                    int(pygl.GL_FLOAT),
-                                    int(pygl.GL_FALSE),
-                                    5 * floatSize,
-                                    nullptr)
-        funcs.glEnableVertexAttribArray(0)
-        # texture coordinate
-
-        funcs.glVertexAttribPointer(1,
-                                    2,
-                                    int(pygl.GL_UNSIGNED_INT),
-                                    int(pygl.GL_FALSE),
-                                    5 * floatSize,
-                                    VoidPtr(3 * floatSize)
-                                    )
-        funcs.glEnableVertexAttribArray(1)
 
         # texture new school
         self.texture = QOpenGLTexture(QOpenGLTexture.Target2D)
@@ -234,46 +204,11 @@ class TextureGL(QOpenGLWidget):
         self.texture.setMinMagFilters(QOpenGLTexture.Linear,
                                       QOpenGLTexture.Linear)
         self.texture.setWrapMode(QOpenGLTexture.DirectionS,
-                                 QOpenGLTexture.Repeat)
+                                 QOpenGLTexture.ClampToEdge)
         self.texture.setWrapMode(QOpenGLTexture.DirectionT,
-                                 QOpenGLTexture.Repeat)
-        # old school
-        # funcs.glBindTexture(pygl.GL_TEXTURE_2D, textureID)
-        # print("tex id bound: ")
-        # funcs.glTexParameteri(pygl.GL_TEXTURE_2D, pygl.GL_TEXTURE_WRAP_S,
-        #                       pygl.GL_REPEAT)
-        # funcs.glTexParameteri(pygl.GL_TEXTURE_2D, pygl.GL_TEXTURE_WRAP_T,
-        #                       pygl.GL_REPEAT)
-        # funcs.glTexParameteri(pygl.GL_TEXTURE_2D, pygl.GL_TEXTURE_MAG_FILTER,
-        #                       pygl.GL_NEAREST)
-        # funcs.glTexParameteri(pygl.GL_TEXTURE_2D, pygl.GL_TEXTURE_MIN_FILTER,
-        #                       pygl.GL_NEAREST)
-        # print("params set: ")
-        # if "png" in self.imagefile:
-        #     print('in png')
-        #     funcs.glTexImage2D(pygl.GL_TEXTURE_2D, 0, pygl.GL_RGB,
-        #                        self.imagepil.size[0], 
-        #                        self.imagepil.size[1], 0,
-        #                        pygl.GL_RGB,
-        #                        pygl.GL_UNSIGNED_BYTE, 
-        #                        0)
-        #     print('tex image done')
-        #     funcs.glGenerateMipmap(pygl.GL_TEXTURE_2D)
-        # else:
-        #     print('not in png')
-        #     funcs.glTexImage2D(pygl.GL_TEXTURE_2D, 0, pygl.GL_RGB,
-        #                        self.imagepil.size[0], 
-        #                        self.imagepil.size[1], 0,
-        #                        pygl.GL_RGB,
-        #                        pygl.GL_UNSIGNED_BYTE,
-        #                        self.imagepil.tobytes())
-        #     funcs.glGenerateMipmap(pygl.GL_TEXTURE_2D)
-
+                                 QOpenGLTexture.ClampToEdge)
+        
         print("texture created: ", isTexture)
-
-        self.vbo.release()
-        vaoBinder = None
-        self.texture.release()
 
     def paintGL(self):
         "paint gl"
@@ -281,24 +216,27 @@ class TextureGL(QOpenGLWidget):
         # clean up what was drawn
         funcs.glClear(pygl.GL_COLOR_BUFFER_BIT)
 
-        # bind texture
-        # self.texture.bind()
-        texID = self.texture.textureId()
-        funcs.glBindTexture(pygl.GL_TEXTURE_2D, texID)
         self.program.bind()
-        vaoBinder = QOpenGLVertexArrayObject.Binder(self.vao)
-        print("program shaders: ", self.program.isLinked())
-        print("texture is bound: ", self.texture.isBound())
-        print("texture width: ", self.texture.width())
-        print("texture target: ", self.texture.target())
-        print("id texture: ", self.texture.textureId())
-        print("storage texture: ", self.texture.isStorageAllocated())
+        self.program.enableAttributeArray(0)
+        self.program.enableAttributeArray(1)
+        floatSize = ctypes.sizeof(ctypes.c_float)
 
-        # draw stuff
+        # set attribute values
+        self.program.setAttributeBuffer(0,  # viewport position
+                                        pygl.GL_FLOAT,  # coord type
+                                        0,  # offset
+                                        3,
+                                        5 * floatSize
+                                        )
+        self.program.setAttributeBuffer(1,  # viewport position
+                                        pygl.GL_FLOAT,  # coord type
+                                        3 * floatSize,  # offset
+                                        2,
+                                        5 * floatSize
+                                        )
+        # bind texture
+        self.texture.bind()
         funcs.glDrawElements(pygl.GL_TRIANGLES,
                              self.indices.size, pygl.GL_UNSIGNED_INT,
                              self.indices.tobytes())
         # funcs.glDrawArrays(pygl.GL_TRIANGLES, 0, 6)
-        vaoBinder = None
-        self.program.release()
-        self.texture.release()
