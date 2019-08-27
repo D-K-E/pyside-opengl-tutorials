@@ -59,14 +59,7 @@ class TextureGL(QOpenGLWidget):
         imdir = os.path.join(mediaDir, "images")
         imFName = "im"
         imageFile = os.path.join(imdir, imFName + "0.png")
-        print("image file:", imageFile)
-        self.imagefile = imageFile
-        # self.image = QImage(imageFile).mirrored().scaledToWidth(self.width())
         self.image = QImage(imageFile).mirrored()
-        self.imagepil = Image.open(imageFile)
-        self.imagenp = np.array(self.imagepil)
-        self.imagenp = self.imagenp.astype(ctypes.c_uint)
-        print("image qimage:", self.image)
         self.core = "--coreprofile" in QCoreApplication.arguments()
 
         # opengl data related
@@ -159,7 +152,6 @@ class TextureGL(QOpenGLWidget):
         funcs = self.context.functions()
         funcs.initializeOpenGLFunctions()
         funcs.glClearColor(1, 0, 1, 1)
-        funcs.glEnable(pygl.GL_TEXTURE_2D)
 
         # shader
         shaderName = "texture"
@@ -195,18 +187,16 @@ class TextureGL(QOpenGLWidget):
 
         # texture new school
         self.texture = QOpenGLTexture(QOpenGLTexture.Target2D)
-        isTexture = self.texture.create()
-        textureID = self.texture.textureId()
-        print("tex id: ", textureID)
+        self.texture.create()
         # new school
         self.texture.bind()
         self.texture.setData(self.image)
         self.texture.setMinMagFilters(QOpenGLTexture.Linear,
                                       QOpenGLTexture.Linear)
         self.texture.setWrapMode(QOpenGLTexture.DirectionS,
-                                 QOpenGLTexture.ClampToEdge)
+                                 QOpenGLTexture.Repeat)
         self.texture.setWrapMode(QOpenGLTexture.DirectionT,
-                                 QOpenGLTexture.ClampToEdge)
+                                 QOpenGLTexture.Repeat)
         
         print("texture created: ", isTexture)
 

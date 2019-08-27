@@ -54,4 +54,4 @@ As stated in the description the list is progressive.
 
 1. [Hello Triangle](./tutorials/01-triangle/TriangleTutorial.ipynb)
 2. [Rectangle](./tutorials/02-rectangle/RectangleTutorial.ipynb)
-3. [Multiple VAO-VBO couples](./tutorials/03-vao-vbo/VAOsVBOs.ipynb)
+4. [Render an Image - Texture](./tutorials/04-vao-vbo/VAOsVBOs.ipynb)
