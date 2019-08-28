@@ -35,7 +35,7 @@ class AppWindow(QtWidgets.QMainWindow):
         self.mainwidget = QtWidgets.QWidget()
         self.mainwidget.setLayout(mainLayout)
         self.mainwidget.setParent(self)
-        self.setWindowTitle("Triangle Opengl widget")
+        self.setWindowTitle("PySide2 OpenGL Test Window")
         self.setMinimumSize(800, 600)
 
     def keyPressEvent(self, event):
