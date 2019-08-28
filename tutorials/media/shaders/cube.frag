@@ -1,8 +1,12 @@
-uniform mediump vec3 objectColor;
-uniform mediump vec3 lightColor;
+varying mediump vec2 TexCoord;
 
+uniform sampler2D myTexture1;
+uniform sampler2D myTexture2;
 
 void main(void)
 {
-    gl_FragColor = vec4(objectColor * lightColor, 1.0);
+    // linear interpolation of first texture with second one
+    // 30% indicates the amount of the presence of the second one
+    gl_FragColor = mix(texture(myTexture1, TexCoord), texture(myTexture2, TexCoord), 0.4);
+    //gl_FragColor = texture(myTexture2, TexCoord);
 }
