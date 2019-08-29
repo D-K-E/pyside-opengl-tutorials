@@ -85,6 +85,8 @@ class CubeGL(QOpenGLWidget):
         self.program = QOpenGLShaderProgram()
         self.texture1 = None
         self.texture2 = None
+        self.texUnit1 = 0
+        self.texUnit2 = 1
 
         # vertex data
         self.cubeVertices = np.array([
@@ -294,8 +296,8 @@ class CubeGL(QOpenGLWidget):
         viewMatrix = self.camera.getViewMatrix()
         self.program.setUniformValue('view',
                                      viewMatrix)
-        self.program.setUniformValue('myTexture1', 0)
-        self.program.setUniformValue('myTexture2', 1)
+        self.program.setUniformValue('myTexture1', self.texUnit1)
+        self.program.setUniformValue('myTexture2', self.texUnit2)
         #
         # deal with vaos and vbo
         # vbo
@@ -331,7 +333,7 @@ class CubeGL(QOpenGLWidget):
         self.texture1 = QOpenGLTexture(
             QOpenGLTexture.Target2D)
         self.texture1.create()
-        self.texture1.bind(0)
+        self.texture1.bind(self.texUnit1)
         self.texture1.setData(self.image1)
         self.texture1.setMinMagFilters(
             QOpenGLTexture.Nearest,
@@ -347,7 +349,7 @@ class CubeGL(QOpenGLWidget):
         self.texture2 = QOpenGLTexture(
             QOpenGLTexture.Target2D)
         self.texture2.create()
-        self.texture2.bind(1)
+        self.texture2.bind(self.texUnit2)
         self.texture2.setData(self.image2)
         self.texture2.setMinMagFilters(
             QOpenGLTexture.Linear,
@@ -386,12 +388,12 @@ class CubeGL(QOpenGLWidget):
             cubeModel.rotate(angle, rotvec)
             self.program.setUniformValue("model",
                                          cubeModel)
-            self.texture1.bind(0)
-            self.texture2.bind(1)
+            self.texture1.bind(self.texUnit1)
+            self.texture2.bind(self.texUnit2)
             funcs.glDrawArrays(
                 pygl.GL_TRIANGLES,
                 0,
-                36
+                self.cubeVertices.size
             )
         self.vbo.release()
         self.program.release()

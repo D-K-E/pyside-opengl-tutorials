@@ -3,8 +3,6 @@
 
 import numpy as np
 import math
-from tutorials.utils.utils import normalize_1d_array
-from tutorials.utils.utils import computeLookAtMatrixNp
 from tutorials.utils.utils import computeLookAtPure
 from tutorials.utils.utils import normalize_tuple
 from tutorials.utils.utils import crossProduct
@@ -93,8 +91,8 @@ class PureCamera:
                    yoffset: float,
                    pitchBound: bool):
         "Look around with camera"
-        xoffset *= self.mouseSensitivity
-        yoffset *= self.mouseSensitivity
+        xoffset *= self.movementSensitivity
+        yoffset *= self.movementSensitivity
         self.yaw += xoffset
         self.pitch += yoffset
 
@@ -240,16 +238,16 @@ class QtCamera:
                    yoffset: float,
                    pitchBound: bool):
         "Look around with camera"
-        xoffset *= self.mouseSensitivity
-        yoffset *= self.mouseSensitivity
+        xoffset *= self.movementSensitivity
+        yoffset *= self.movementSensitivity
         self.yaw += xoffset
         self.pitch += yoffset
 
         if pitchBound:
-            if self.pitch > 90.0:
-                self.pitch = 90.0
-            elif self.pitch < -90.0:
-                self.pitch = -90.0
+            if self.pitch > 89.9:
+                self.pitch = 89.9
+            elif self.pitch < -89.9:
+                self.pitch = -89.9
         #
         self.updateCameraVectors()
 
@@ -266,10 +264,10 @@ class QtCamera:
     def getViewMatrix(self):
         "Obtain view matrix for camera"
         view = QMatrix4x4()
-        look = view.lookAt(self.position,
-                           self.position+self.front,
-                           self.up
-                           )
+        view.lookAt(self.position,
+                    self.position+self.front,
+                    self.up
+                    )
         return view
 
     def setCameraWithVectors(self,

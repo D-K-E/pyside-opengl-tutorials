@@ -44,7 +44,7 @@ except ImportError:
     sys.exit(1)
 
 
-class CubeGL(QOpenGLWidget):
+class EventsGL(QOpenGLWidget):
     "Cube gl widget"
 
     def __init__(self, parent=None):
@@ -55,6 +55,7 @@ class CubeGL(QOpenGLWidget):
         self.camera.position = QVector3D(0.0, 0.0, 3.0)
         self.camera.front = QVector3D(0.0, 0.0, -1.0)
         self.camera.up = QVector3D(0.0, 1.0, 0.0)
+        self.camera.movementSensitivity = 0.05
 
         # shaders etc
         tutoTutoDir = os.path.dirname(__file__)
@@ -85,6 +86,8 @@ class CubeGL(QOpenGLWidget):
         self.program = QOpenGLShaderProgram()
         self.texture1 = None
         self.texture2 = None
+        self.texUnit1 = 0
+        self.texUnit2 = 1
 
         # vertex data
         self.cubeVertices = np.array([
@@ -134,7 +137,7 @@ class CubeGL(QOpenGLWidget):
         )
         # cube worldSpace coordinates
         self.cubeCoords = [
-            QVector3D(0.0,  0.0,  0.0),
+            QVector3D(0.2,  1.1,  -1.0),
             QVector3D(2.0,  5.0, -15.0),
             QVector3D(-1.5, -2.2, -2.5),
             QVector3D(-3.8, -2.0, -12.3),
@@ -145,8 +148,7 @@ class CubeGL(QOpenGLWidget):
             QVector3D(1.5,  0.2, -1.5),
             QVector3D(-1.3,  1.0, -1.5)
         ]
-        # notice the correspondance the vec4 of fragment shader
-        # and our choice here
+        self.rotateVector = QVector3D(0.7, 0.2, 0.5)
 
     def loadShader(self,
                    shaderName: str,
@@ -226,6 +228,26 @@ class CubeGL(QOpenGLWidget):
         )
         return info
 
+    def moveCamera(self, direction: str):
+        "Move camera to certain direction and update gl widget"
+        self.camera.move(direction, deltaTime=0.05)
+        self.update()
+
+    def turnAround(self, x: float, y: float):
+        ""
+        self.camera.lookAround(xoffset=x,
+                               yoffset=y,
+                               pitchBound=True)
+        self.update()
+
+    def rotateCubes(self, xval: float,
+                    yval: float, zval: float):
+        ""
+        self.rotateVector.setZ(zval)
+        self.rotateVector.setY(yval)
+        self.rotateVector.setX(xval)
+        self.update()
+
     def cleanUpGl(self):
         "Clean up everything"
         self.context.makeCurrent()
@@ -280,8 +302,8 @@ class CubeGL(QOpenGLWidget):
         # bind the program
         self.program.bind()
 
-                self.program.setUniformValue('myTexture1', 0)
-        self.program.setUniformValue('myTexture2', 1)
+        self.program.setUniformValue('myTexture1', self.texUnit1)
+        self.program.setUniformValue('myTexture2', self.texUnit2)
         #
         # deal with vaos and vbo
         # vbo
@@ -317,7 +339,7 @@ class CubeGL(QOpenGLWidget):
         self.texture1 = QOpenGLTexture(
             QOpenGLTexture.Target2D)
         self.texture1.create()
-        self.texture1.bind(0)
+        self.texture1.bind(self.texUnit1)
         self.texture1.setData(self.image1)
         self.texture1.setMinMagFilters(
             QOpenGLTexture.Nearest,
@@ -333,7 +355,7 @@ class CubeGL(QOpenGLWidget):
         self.texture2 = QOpenGLTexture(
             QOpenGLTexture.Target2D)
         self.texture2.create()
-        self.texture2.bind(1)
+        self.texture2.bind(self.texUnit2)
         self.texture2.setData(self.image2)
         self.texture2.setMinMagFilters(
             QOpenGLTexture.Linear,
@@ -377,18 +399,17 @@ class CubeGL(QOpenGLWidget):
         self.program.setUniformValue('view',
                                      viewMatrix)
 
-        rotvec = QVector3D(0.7, 0.2, 0.5)
         # bind textures
         for i, pos in enumerate(self.cubeCoords):
             #
             cubeModel = QMatrix4x4()
             cubeModel.translate(pos)
             angle = 30 * i
-            cubeModel.rotate(angle, rotvec)
+            cubeModel.rotate(angle, self.rotateVector)
             self.program.setUniformValue("model",
                                          cubeModel)
-            self.texture1.bind(0)
-            self.texture2.bind(1)
+            self.texture1.bind(self.texUnit1)
+            self.texture2.bind(self.texUnit2)
             funcs.glDrawArrays(
                 pygl.GL_TRIANGLES,
                 0,
