@@ -56,3 +56,5 @@ As stated in the description the list is progressive.
 2. [Rectangle](./tutorials/02-rectangle/RectangleTutorial.ipynb)
 3. [Multiple VAO-VBO couples](./tutorials/03-VaoVbo/VAOsVBOs.ipynb)
 4. [Render an Image - Texture](./tutorials/04-texture/TextureTutorial.ipynb)
+5. [Hello Cube - 3D rendering](./tutorials/05-cube/CubeTutorial.ipynb)
+5. [Event Handling](./tutorials/06-events/EventsTutorial.ipynb)

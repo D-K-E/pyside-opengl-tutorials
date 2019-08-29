@@ -3,14 +3,12 @@
 
 import numpy as np
 import math
-from utils import normalize_1d_array
-from utils import computeLookAtMatrixNp
-from utils import computeLookAtPure
-from utils import normalize_tuple
-from utils import crossProduct
-from utils import scalar2vecMult
-from utils import vec2vecAdd
-from utils import vec2vecSubs
+from tutorials.utils.utils import computeLookAtPure
+from tutorials.utils.utils import normalize_tuple
+from tutorials.utils.utils import crossProduct
+from tutorials.utils.utils import scalar2vecMult
+from tutorials.utils.utils import vec2vecAdd
+from tutorials.utils.utils import vec2vecSubs
 from PySide2.QtGui import QVector3D
 from PySide2.QtGui import QMatrix4x4
 from PySide2.QtGui import QVector4D
@@ -93,8 +91,8 @@ class PureCamera:
                    yoffset: float,
                    pitchBound: bool):
         "Look around with camera"
-        xoffset *= self.mouseSensitivity
-        yoffset *= self.mouseSensitivity
+        xoffset *= self.movementSensitivity
+        yoffset *= self.movementSensitivity
         self.yaw += xoffset
         self.pitch += yoffset
 
@@ -183,9 +181,9 @@ class QtCamera:
         # Camera attributes
         self.position = QVector3D(0.0, 0.0, 0.0)
         self.front = QVector3D(0.0, 0.0, -0.5)
-        self.up = QVector3D(0.0, 1.0, 0.0)
+        self.worldUp = QVector3D(0.0, 1.0, 0.0)
         self.right = QVector3D()
-        self.worldUp = QVector3D()
+        self.up = QVector3D()
 
         # Euler Angles for rotation
         self.yaw = -90.0
@@ -240,16 +238,16 @@ class QtCamera:
                    yoffset: float,
                    pitchBound: bool):
         "Look around with camera"
-        xoffset *= self.mouseSensitivity
-        yoffset *= self.mouseSensitivity
+        xoffset *= self.movementSensitivity
+        yoffset *= self.movementSensitivity
         self.yaw += xoffset
         self.pitch += yoffset
 
         if pitchBound:
-            if self.pitch > 90.0:
-                self.pitch = 90.0
-            elif self.pitch < -90.0:
-                self.pitch = -90.0
+            if self.pitch > 89.9:
+                self.pitch = 89.9
+            elif self.pitch < -89.9:
+                self.pitch = -89.9
         #
         self.updateCameraVectors()
 
@@ -266,45 +264,43 @@ class QtCamera:
     def getViewMatrix(self):
         "Obtain view matrix for camera"
         view = QMatrix4x4()
-        look = view.lookAt(self.position,
-                           self.position+self.front,
-                           self.up
-                           )
+        view.lookAt(self.position,
+                    self.position+self.front,
+                    self.up
+                    )
         return view
 
     def setCameraWithVectors(self,
-                             position: QVector3D,
-                             up: QVector3D,
-                             front: QVector3D,
-                             yaw: float,
-                             pitch: float,
-                             zoom: float,
-                             speed: float,
-                             sensitivity: float):
+                             position=QVector3D(0.0, 0.0, 0.0),
+                             worldUp=QVector3D(0.0, 1.0, 0.0),
+                             yaw=-90.0,
+                             pitch=0.0,
+                             zoom=45.0,
+                             speed=2.5,
+                             sensitivity=0.00001):
         "Set camera"
         self.position = position
-        self.worldUp = up
+        self.worldUp = worldUp
         self.pitch = pitch
         self.yaw = yaw
         self.movementSpeed = speed
         self.movementSensitivity = sensitivity
-        self.front = front
         self.zoom = zoom
         self.updateCameraVectors()
 
     def setCameraWithFloatVals(self,
-                               posx: float,
-                               posy: float,
-                               posz: float,
-                               upx: float,
-                               upy: float,
-                               upz: float,
-                               yaw: float,
-                               pitch: float,
-                               speed: float,
-                               sensitivity: float,
-                               zoom: float,
-                               front: np.ndarray):
+                               posx=0.0,
+                               posy=0.0,
+                               posz=0.0,
+                               upx=0.0,
+                               upy=1.0,
+                               upz=0.0,
+                               yaw=-90.0,
+                               pitch=0.0,
+                               zoom=45.0,
+                               speed=2.5,
+                               sensitivity=0.00001,
+                               ):
         "Set camera floats"
         self.position = QVector3D(posx, posy, posz)
         self.worldUp = QVector3D(upx, upy, upz)
@@ -313,7 +309,6 @@ class QtCamera:
         self.movementSpeed = speed
         self.movementSensitivity = sensitivity
         self.zoom = zoom
-        self.front = front
         self.updateCameraVectors()
 
 

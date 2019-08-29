@@ -2,13 +2,13 @@
 
 from PySide2 import QtWidgets
 from tutorials.utils.window import GLWindow as AppWindow
-from gltexture import TextureGL
+from glcube import CubeGL
 import sys
 
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
-    window = AppWindow(TextureGL)
+    window = AppWindow(CubeGL)
     window.show()
     res = app.exec_()
     sys.exit(res)

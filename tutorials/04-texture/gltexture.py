@@ -197,8 +197,6 @@ class TextureGL(QOpenGLWidget):
                                  QOpenGLTexture.Repeat)
         self.texture.setWrapMode(QOpenGLTexture.DirectionT,
                                  QOpenGLTexture.Repeat)
-        
-        print("texture created: ", isTexture)
 
     def paintGL(self):
         "paint gl"
