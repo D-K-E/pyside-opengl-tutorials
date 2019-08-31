@@ -6,8 +6,7 @@ import os
 import sys
 import ctypes
 from tutorials.utils.camera import QtCamera
-from tutorials.utils.light import QtPointLightSource
-from tutorials.utils.light import QtLight
+from tutorials.utils.light import QtShaderLight
 
 from PySide2.QtGui import QVector3D
 from PySide2.QtGui import QImage
@@ -44,7 +43,7 @@ except ImportError:
     sys.exit(1)
 
 
-class EventsGL(QOpenGLWidget):
+class LightsGL(QOpenGLWidget):
     "Cube gl widget"
 
     def __init__(self, parent=None):
@@ -58,8 +57,7 @@ class EventsGL(QOpenGLWidget):
         self.camera.movementSensitivity = 0.05
 
         # light source: point light source
-        self.lamp = QtPointLightSource()
-        self.light = QtLight()
+        self.lamp = QtShaderLight()
 
         # shaders etc
         tutoTutoDir = os.path.dirname(__file__)
@@ -85,6 +83,7 @@ class EventsGL(QOpenGLWidget):
         self.nmap = QImage(normalMap)
         self.image1 = self.image1.copy(cropRect)
         self.nmap = self.nmap.copy(cropRect)
+        self.shininess = 5.0
 
         # opengl data related
         self.context = QOpenGLContext()
@@ -203,7 +202,9 @@ class EventsGL(QOpenGLWidget):
             QVector3D(1.5,  0.2, -1.5),
             QVector3D(-1.3,  1.0, -1.5)
         ]
-        self.rotateVector = QVector3D(0.7, 0.2, 0.5)
+        self.rotVectorCube = QVector3D(0.7, 0.2, 0.5)
+        self.rotVectorLamp = QVector3D(0.1, 0.2, 0.5)
+        self.rotationAngle = 45.0
 
     def loadShader(self,
                    shaderName: str,
@@ -265,30 +266,34 @@ class EventsGL(QOpenGLWidget):
     def rotateCubes(self, xval: float,
                     yval: float, zval: float):
         ""
-        self.rotateVector.setZ(zval)
-        self.rotateVector.setY(yval)
-        self.rotateVector.setX(xval)
+        self.rotVectorCube.setZ(zval)
+        self.rotVectorCube.setY(yval)
+        self.rotVectorCube.setX(xval)
         self.update()
+
+    def changeShininess(self, val: float):
+        "set a new shininess value to cube fragment shader"
+        self.shininess = val
 
     def setLightPos(self, xval: float,
                     yval: float, zval: float):
         ""
         newpos = QVector3D(xval, yval, zval)
-        self.lamp.position = newpos
-        self.light.position = newpos
+        self.lamp.setPosition(vec=newpos)
         self.update()
 
     def rotateLight(self, xval: float,
                     yval: float, zval: float):
         ""
-        newdirection = QVector3D(xval, yval, zval)
-        self.lamp.direction = newdirection
-        self.light.direction = newdirection
+        newRotVec = QVector3D(xval, yval, zval)
+        self.rotVectorLamp = newRotVec
+        self.lamp.setDirection(vec=newRotVec)
         self.update()
 
-    def changeLightSourceChannelIntensity(self,
-                                          channel: str,
-                                          val: float):
+    def changeLampIntensity(self,
+                            channel: str,
+                            val: float,
+                            colorType="all"):
         ""
         availables = ["red", "green", "blue", "all"]
         if channel not in availables:
@@ -296,18 +301,15 @@ class EventsGL(QOpenGLWidget):
             mess += ", available channels are: "
             mess += "red, green, blue, all"
             raise ValueError(mess)
-        elif channel == "all":
-            self.lamp.setIntensity('red', val)
-            self.lamp.setIntensity('green', val)
-            self.lamp.setIntensity('blue', val)
-        else:
-            self.lamp.setIntensity(channel, val)
-        #
+        self.lamp.setIntensity(colorType=colorType,
+                               channel=channel,
+                               val=val)
         self.update()
 
-    def changeLightSourceChannelIntensityCoefficient(self,
-                                                     channel: str,
-                                                     val: float):
+    def changeLampIntensityCoefficient(self,
+                                       channel: str,
+                                       val: float,
+                                       colorType="all"):
         ""
         availables = ["red", "green", "blue", "all"]
         if channel not in availables:
@@ -315,48 +317,44 @@ class EventsGL(QOpenGLWidget):
             mess += ", available channels are: "
             mess += "red, green, blue, all"
             raise ValueError(mess)
-        elif channel == "all":
-            self.lamp.setCoeffs('red', val)
-            self.lamp.setCoeffs('green', val)
-            self.lamp.setCoeffs('blue', val)
-        else:
-            self.lamp.setIntensity(channel, val)
         #
+        self.lamp.setCoeffs(colorType=colorType,
+                            channel=channel,
+                            val=val)
         self.update()
 
-    def changeAmbientLight(self, xval: float,
-                           yval: float, zval: float):
+    def changeAmbientLightIntensity(self, xval: float,
+                                    yval: float, zval: float):
         ""
-        self.light.ambient = QVector3D(xval,
-                                       yval,
-                                       zval)
+        self.lamp.ambient.setIntensity(vec=QVector3D(xval,
+                                                     yval,
+                                                     zval))
         self.update()
 
-    def changeSpecularLight(self, xval: float,
-                            yval: float,
-                            zval: float):
-        self.light.specular = QVector3D(xval,
-                                        yval,
-                                        zval)
+    def changeAmbientLightCoeffs(self, xval: float, yval: float,
+                                 zval: float):
+        self.lamp.ambient.setCoeffs(vec=QVector3D(xval, yval, zval))
         self.update()
 
-    def changeDiffuseLight(self, xval: float,
-                           yval: float,
-                           zval: float):
-        ""
-        self.light.diffuse = QVector3D(xval,
-                                       yval,
-                                       zval)
-        self.update()
-
-    def setAttenLinear(self, val: float):
+    def setLampAttenuation(self,
+                           attenConst: float,
+                           attenLin: float,
+                           attenQuad: float,
+                           colorType="all",
+                           ):
         "set linear attenuation"
-        self.light.attenLinear = val
+        vec = QVector3D(attenConst, attenLin, attenQuad)
+        self.lamp.setAttenuation(vec=vec,
+                                 colorType=colorType)
         self.update()
 
-    def setAttenQuadratic(self, val):
-        ""
-        self.light.attenQuad = val
+    def setCutOff(self, val):
+        self.lamp.setCutOff(val)
+        self.update()
+
+    def setRotationAngle(self,
+                         val: float):
+        self.rotationAngle = val
         self.update()
 
     def cleanUpGl(self):
@@ -374,6 +372,147 @@ class EventsGL(QOpenGLWidget):
         "Resize the viewport"
         funcs = self.context.functions()
         funcs.glViewport(0, 0, width, height)
+
+    def setCubeUniforms_proc(self):
+        ""
+        projectionMatrix = QMatrix4x4()
+        projectionMatrix.perspective(
+            self.camera.zoom,
+            self.width() / self.height(),
+            0.2, 100.0)
+
+        self.program.setUniformValue('projection',
+                                     projectionMatrix)
+
+        # set view/camera matrix
+        viewMatrix = self.camera.getViewMatrix()
+        self.program.setUniformValue('view',
+                                     viewMatrix)
+        # end vertex shader
+        # fragment shader
+        self.program.setUniformValue("material.shininess",
+                                     self.shininess)
+        self.program.setUniformValue("light.position",
+                                     self.lamp.position)
+        self.program.setUniformValue("light.direction", self.lamp.direction)
+        self.program.setUniformValue("light.ambient",
+                                     self.lamp.ambient.intensity)
+        self.program.setUniformValue("light.diffuse",
+                                     self.lamp.diffuse.intensity)
+        self.program.setUniformValue("light.specular",
+                                     self.lamp.specular.intensity)
+        self.program.setUniformValue("coeffs.ambient",
+                                     self.lamp.ambient.getCoeffAverage())
+        self.program.setUniformValue("coeffs.diffuse",
+                                     self.lamp.diffuse.getCoeffAverage())
+        self.program.setUniformValue("coeffs.specular",
+                                     self.lamp.specular.getCoeffAverage())
+        self.program.setUniformValue("coeffs.lightCutOff",
+                                     self.lamp.cutOff)
+        self.program.setUniformValue("coeffs.attrConstant",
+                                     self.lamp.attenuation.x())
+        self.program.setUniformValue("coeffs.attrLinear",
+                                     self.lamp.attenuation.y())
+        self.program.setUniformValue("coeffs.attrQuadratic",
+                                     self.lamp.attenuation.z())
+        self.program.setUniformValue("viewerPosition", self.camera.position)
+        # end fragment shader
+        return
+
+    def setCubeModelUniform_proc(self, i: int, pos: QVector3D):
+        "procedure for setting cube uniform"
+        cubeModel = QMatrix4x4()
+        cubeModel.translate(pos)
+        angle = 30 * i
+        cubeModel.rotate(angle, self.rotVectorCube)
+        self.program.setUniformValue("model",
+                                     cubeModel)
+        self.texture1.bind(self.texUnit1)
+        self.texture2.bind(self.texUnit2)
+        return
+
+    def setLampUniforms_proc(self):
+        projectionMatrix = QMatrix4x4()
+        projectionMatrix.perspective(
+            self.camera.zoom,
+            self.width() / self.height(),
+            0.2, 100.0)
+        viewMatrix = self.camera.getViewMatrix()
+        self.lampProgram.setUniformValue("projection",
+                                         projectionMatrix)
+        self.lampProgram.setUniformValue("view", viewMatrix)
+        lampModel = QMatrix4x4()
+        lampModel.translate(self.lamp.position)
+        lampModel.rotate(self.rotationAngle,
+                         self.rotVectorLamp)
+        self.lampProgram.setUniformValue("model",
+                                         lampModel)
+        self.lampProgram.setUniformValue(
+            "color",
+            self.lamp.diffuse.color
+        )
+
+    def lampShaderInit_proc(self, vshader, fshader):
+        self.lampProgram.addShader(vshader)
+        self.lampProgram.addShader(fshader)
+        self.lampProgram.bindAttributeLocation(
+            "aPos", 0)
+        # lamp needs view, projection, model matrices
+        # view would come from camera
+        # model is cube
+        # lamp also sets a position as attribute and a color as uniform
+        # lamp vertices prepare for that
+        isLinked = self.lampProgram.link()
+        print("lamp program is linked: ", isLinked)
+        # bind the lamp
+        self.lampProgram.bind()
+
+    def cubeShaderInit_proc(self, vshader, fshader, attrLocs):
+        self.program.addShader(vshader)
+        self.program.addShader(fshader)
+        self.program.bindAttributeLocation(
+            "aPos", 0)
+        self.program.bindAttributeLocation(
+            "aNormal", attrLocs['aNormal'])
+        self.program.bindAttributeLocation(
+            "aTexCoord", attrLocs['aTexCoord'])
+        isLinked = self.program.link()
+        print("light cube shader program is linked: ",
+              isLinked)
+        # bind the program
+        self.program.bind()
+
+    def texture1_proc(self):
+        self.texture1 = QOpenGLTexture(
+            QOpenGLTexture.Target2D)
+        self.texture1.create()
+        self.texture1.bind(self.texUnit1)
+        self.texture1.setData(self.image1)
+        self.texture1.setMinMagFilters(
+            QOpenGLTexture.Nearest,
+            QOpenGLTexture.Nearest)
+        self.texture1.setWrapMode(
+            QOpenGLTexture.DirectionS,
+            QOpenGLTexture.Repeat)
+        self.texture1.setWrapMode(
+            QOpenGLTexture.DirectionT,
+            QOpenGLTexture.Repeat)
+
+    def texture2_proc(self):
+        self.texture2 = QOpenGLTexture(
+            QOpenGLTexture.Target2D)
+        self.texture2.create()
+        self.texture2.bind(self.texUnit2)
+        self.texture2.setData(self.nmap)
+        self.texture2.setMinMagFilters(
+            QOpenGLTexture.Nearest,
+            QOpenGLTexture.Nearest)
+        self.texture2.setWrapMode(
+            QOpenGLTexture.DirectionS,
+            QOpenGLTexture.Repeat)
+        self.texture2.setWrapMode(
+            QOpenGLTexture.DirectionT,
+            QOpenGLTexture.Repeat)
 
     def initializeGL(self):
         print('gl initial')
@@ -398,22 +537,11 @@ class EventsGL(QOpenGLWidget):
             self.context
         )
         #
-        shaderName = "lamp"
-        vshader = self.loadVertexShader(shaderName)
-        fshader = self.loadFragmentShader(shaderName)
-        self.lampProgram.addShader(vshader)
-        self.lampProgram.addShader(fshader)
-        self.lampProgram.bindAttributeLocation(
-            "aPos", 0)
-        # lamp needs view, projection, model matrices
-        # view would come from camera
-        # model is cube
-        # lamp also sets a position as attribute and a color as uniform
-        # lamp vertices prepare for that
-        isLinked = self.lampProgram.link()
-        print("lamp program is linked: ", isLinked)
-        # bind the lamp
-        self.lampProgram.bind()
+        vshader = self.loadVertexShader("lamp")
+        fshader = self.loadFragmentShader("lamp")
+        print("lamp shader before init")
+        self.lampShaderInit_proc(vshader, fshader)
+        print("lamp shader after init")
         # end lamp shader
 
         # cube shader
@@ -421,20 +549,10 @@ class EventsGL(QOpenGLWidget):
         shaderName = "light"
         vshader = self.loadVertexShader(shaderName)
         fshader = self.loadFragmentShader(shaderName)
-        self.program.addShader(vshader)
-        self.program.addShader(fshader)
         attrLocs = {"aPos": 0, "aNormal": 1, "aTexCoord": 2}
-        self.program.bindAttributeLocation(
-            "aPos", 0)
-        self.program.bindAttributeLocation(
-            "aNormal", attrLocs['aNormal'])
-        self.program.bindAttributeLocation(
-            "aTexCoord", attrLocs['aTexCoord'])
-        isLinked = self.program.link()
-        print("light cube shader program is linked: ",
-              isLinked)
-        # bind the program
-        self.program.bind()
+        print("cube shader before init")
+        self.cubeShaderInit_proc(vshader, fshader, attrLocs)
+        print("cube shader after init")
         # uniforms related position and light would be changed during the
         # drawing since we are handling events as well but we should set
         # those that are related material right away
@@ -452,7 +570,7 @@ class EventsGL(QOpenGLWidget):
         self.lampVbo.allocate(self.lampVertices.tobytes(),
                               floatSize * self.lampVertices.size)
         self.lampVao.create()
-        lvaoBinder = QOpenGLVertexArrayObject.Binder(self.lampVao)
+        self.lampVao.bind()
         funcs.glEnableVertexAttribArray(0)  # aPos attribute
         funcs.glVertexAttribPointer(0, 3, int(pygl.GL_FLOAT),
                                     int(pygl.GL_FALSE),
@@ -486,47 +604,57 @@ class EventsGL(QOpenGLWidget):
 
         # deal with textures
         # first texture
-        self.texture1 = QOpenGLTexture(
-            QOpenGLTexture.Target2D)
-        self.texture1.create()
-        self.texture1.bind(self.texUnit1)
-        self.texture1.setData(self.image1)
-        self.texture1.setMinMagFilters(
-            QOpenGLTexture.Nearest,
-            QOpenGLTexture.Nearest)
-        self.texture1.setWrapMode(
-            QOpenGLTexture.DirectionS,
-            QOpenGLTexture.Repeat)
-        self.texture1.setWrapMode(
-            QOpenGLTexture.DirectionT,
-            QOpenGLTexture.Repeat)
-
+        self.texture1_proc()
         # second texture
-        self.texture2 = QOpenGLTexture(
-            QOpenGLTexture.Target2D)
-        self.texture2.create()
-        self.texture2.bind(self.texUnit2)
-        self.texture2.setData(self.image2)
-        self.texture2.setMinMagFilters(
-            QOpenGLTexture.Linear,
-            QOpenGLTexture.Linear)
-        self.texture2.setWrapMode(
-            QOpenGLTexture.DirectionS,
-            QOpenGLTexture.Repeat)
-        self.texture2.setWrapMode(
-            QOpenGLTexture.DirectionT,
-            QOpenGLTexture.Repeat)
+        self.texture2_proc()
+        #
+        self.lampVbo.release()
+        lvaoBinder = None
+        self.vbo.release()
+        self.vao.release()
 
     def paintGL(self):
         "drawing loop"
         funcs = self.context.functions()
-
         # clean up what was drawn
         funcs.glClear(
             pygl.GL_COLOR_BUFFER_BIT | pygl.GL_DEPTH_BUFFER_BIT
         )
+        # cubes
         # bind necessary
+        self.vao.bind()
+        self.vbo.bind()
+        # bind the shader program
+        self.program.bind()
+        # set uniforms
+        self.setCubeUniforms_proc()
+        # end set uniforms
         # render cubes
+        for i, pos in enumerate(self.cubeCoords):
+            #
+            self.setCubeModelUniform_proc(i, pos)
+            funcs.glDrawArrays(
+                pygl.GL_TRIANGLES,
+                0,
+                36
+            )
         # unbind necessary
+        self.vbo.release()
+        self.program.release()
+        # #### lamp
+        #
         # bind necessary
+        self.lampVao.bind()
+        self.lampVbo.bind()
+        #
+        # bind shader program
+        self.lampProgram.bind()
+        # set uniforms
+        self.setLampUniforms_proc()
+        # end uniforms
         # render lamp
+        funcs.glDrawArrays(
+            pygl.GL_TRIANGLES,
+            0,
+            36
+        )

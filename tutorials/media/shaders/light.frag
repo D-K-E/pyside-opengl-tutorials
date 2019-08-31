@@ -1,12 +1,13 @@
-varying mediump vec3 Normal;
-varying mediump vec3 TexCoords;
-varying mediump vec3 FragPos;
+#version 330 core
+in mediump vec3 Normal;
+in mediump vec2 TexCoords;
+in mediump vec3 FragPos;
 
 struct Material {
   sampler2D diffuseMap; // object picture
   sampler2D specularMap; // normal map
   float shininess;
-}
+};
 
 uniform Material material;
 
@@ -17,7 +18,7 @@ struct SpotLight {
   highp vec3 ambient;
   highp vec3 diffuse;
   highp vec3 specular;
-}
+};
 
 uniform SpotLight light;
 
@@ -31,7 +32,7 @@ struct Coefficients {
   float attrConstant;
   float attrLinear;
   float attrQuadratic;
-}
+};
 
 uniform Coefficients coeffs;
 
@@ -51,9 +52,10 @@ void main(void) {
   float theta = dot(lightDirection, normalize(-light.direction));
 
   if (theta > coeffs.lightCutOff) {
-    float costheta = max(dot(norm, lightDirection), 0.0);
+      float normDirectDot = dot(norm, lightDirection);
+    float costheta = max(normDirectDot, 0.0);
     // diffuse color
-    vec3 diffuseColor = light.diffuseColor * texture(material.diffuseMap,
+    vec3 diffuseColor = light.diffuse * texture(material.diffuseMap,
     TexCoords).rgb;
     diffuseColor = diffuseColor * coeffs.diffuse * costheta * attenuation;
 
@@ -61,7 +63,7 @@ void main(void) {
     // ambient  *= attenuation; // remove attenuation from ambient, as
     // otherwise at large distances the light would be darker inside than
     // outside the spotlight due the ambient term in the else branche
-    vec3 ambientTerm = light.ambientColor * texture(material.diffuseMap,
+    vec3 ambientTerm = light.ambient * texture(material.diffuseMap,
     TexCoords).rgb;
     ambientTerm = ambientTerm * coeffs.ambient; //* attenuation;
 
@@ -70,7 +72,7 @@ void main(void) {
     vec3 reflectionDirection = reflect(-lightDirection, norm);
     float specularAngle = max(dot(viewerDirection, reflectionDirection), 0.0);
     specularAngle = pow(specularAngle, material.shininess);
-    vec3 specular = light.specularColor * texture(material.specularMap,
+    vec3 specular = light.specular * texture(material.specularMap,
     TexCoords).rgb;
     specular = specular * specularAngle * coeffs.specular * attenuation;
 
@@ -79,7 +81,7 @@ void main(void) {
   }else{
     // else, use ambient light so scene isn't completely dark outside the
     // spotlight.
-    gl_FragColor = vec4(light.ambientColor * texture(
+    gl_FragColor = vec4(light.ambient * texture(
         material.diffuseMap, TexCoords).rgb, 1.0);
       }
 }

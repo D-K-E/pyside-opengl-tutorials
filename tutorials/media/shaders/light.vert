@@ -1,10 +1,11 @@
+#version 330 core
 attribute mediump vec3 aPos;
 attribute mediump vec3 aNormal;
 attribute mediump vec2 aTexCoord;
 
-varying mediump vec3 Normal;
-varying mediump vec2 TexCoords;
-varying mediump vec3 FragPos;
+out mediump vec3 Normal;
+out mediump vec2 TexCoords;
+out mediump vec3 FragPos;
 
 uniform highp mat4 model;
 uniform highp mat4 view;

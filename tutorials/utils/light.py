@@ -2,15 +2,13 @@
 # purpose implements a light object
 
 
-import numpy as np
 import math
 from PySide2.QtGui import QVector3D
-from PySide2.QtGui import QColor
-from utils.utils import normalize_tuple
-from utils.utils import vec2vecDot
+from tutorials.utils.utils import normalize_tuple
+from tutorials.utils.utils import vec2vecDot
 
 
-class PurePointLightSource:
+class PureLightSource:
     "A pure python light source implementation"
 
     def __init__(self,
@@ -55,7 +53,7 @@ class PurePointLightSource:
         self.attenVals = [
             # data taken on 2019-08-30 from
             # https://learnopengl.com/Lighting/Light-casters
-            #distance, attenConst, attenLin, attenQaud
+            # distance, attenConst, attenLin, attenQaud
             [7, 1.0, 0.7, 1.8],
             [13, 1.0, 0.35, 0.44],
             [20, 1.0, 0.22, 0.20],
@@ -100,7 +98,12 @@ class PurePointLightSource:
         third = self.attenQuad * distance * distance
         return min(1, 1 / (self.attenConst + second + third))
 
-    #
+    def setAttenuation(self, **kwargs):
+        "set attenuation"
+        self.attenConst = kwargs['aConst']
+        self.attenLinear = kwargs['aLin']
+        self.attenQuad = kwargs['aQuad']
+
     def setColor(self):
         "Set color"
         self.color = {
@@ -109,44 +112,66 @@ class PurePointLightSource:
             "b": self.intensity['b'] * self.coeffs['b']
         }
 
-    def setIntensity(self, channel: str,
-                     val: float):
+    def setIntensity(self, **kwargs):
         "Set channel intensity"
+        name = kwargs['channel']
+        val = kwargs['val']
         assert val >= 0.0 and val <= 255.0
-        channel = channel.lower()
-        if channel == "red" or channel == "r":
+        name = name.lower()
+        if name == "red" or name == "r":
             self.intensity['r'] = val
-        elif channel == "green" or channel == "g":
+        elif name == "green" or name == "g":
             self.intensity['g'] = val
-        elif channel == "blue" or channel == "b":
+        elif name == "blue" or name == "b":
             self.intensity['b'] = val
         else:
-            mess = "Unknown channel name " + channel
+            mess = "Unknown name name " + name
             mess += ", available channels are: "
             mess += "red, green, blue"
             raise ValueError(mess)
         self.setColor()
 
-    def setCoeffs(self, channel: str,
-                  val: float):
+    def setCoeffs(self, **kwargs):
         "Set coefficients"
+        name = kwargs['channel']
+        val = kwargs['val']
         assert val >= 0.0 and val <= 1.0
-        channel = channel.lower()
-        if channel == "red" or channel == "r":
+        name = name.lower()
+        if name == "red" or name == "r":
             self.coeffs['r'] = val
-        elif channel == "green" or channel == "g":
+        elif name == "green" or name == "g":
             self.coeffs['g'] = val
-        elif channel == "blue" or channel == "b":
+        elif name == "blue" or name == "b":
             self.coeffs['b'] = val
         else:
-            mess = "Unknown channel name " + channel
+            mess = "Unknown channel name " + name
             mess += ", available channels are: "
             mess += "red, green, blue"
             raise ValueError(mess)
         self.setColor()
 
+    def setPosition(self, **kwargs):
+        "set position of the light source"
+        x, y, z = kwargs['x'], kwargs['y'], kwargs['z']
+        self.position = {"x": x, "y": y, "z": z}
 
-class QtPointLightSource(PurePointLightSource):
+    def setDirection(self, **kwargs):
+        "set direction of the light source"
+        x, y, z = kwargs['x'], kwargs['y'], kwargs['z']
+        self.direction = {"x": x, "y": y, "z": z}
+
+    def setCutOff(self, val: float):
+        ""
+        self.cutOff = val
+
+    def getCoeffAverage(self):
+        "Get the average value of its coefficients"
+        red, green = self.coeffs['r'], self.coeffs['g']
+        blue = self.coeffs['b']
+        return (red + green + blue) / 3
+
+
+class QtLightSource(PureLightSource):
     "A light source"
 
     def __init__(self,
@@ -159,9 +184,6 @@ class QtPointLightSource(PurePointLightSource):
                                         1.0,
                                         1.0),
                  attenuation=QVector3D(1.0, 0.7, 1.8),
-                 attenuationConstant=1.0,
-                 attenuationLinear=0.7,
-                 attenuationQuadratic=1.8,
                  cutOff=math.cos(math.radians(12.5))
                  ):
         ""
@@ -190,26 +212,7 @@ class QtPointLightSource(PurePointLightSource):
         self.coeffs = coefficients
         self.setColor()
         self.cutOff = cutOff
-        self.attenConst = attenuationConstant
-        self.attenLinear = attenuationLinear
-        self.attenQuad = attenuationQuadratic
-        self.attenVals = [
-            # data taken on 2019-08-30 from
-            # https://learnopengl.com/Lighting/Light-casters
-            #distance, attenConst, attenLin, attenQaud
-            [7, 1.0, 0.7, 1.8],
-            [13, 1.0, 0.35, 0.44],
-            [20, 1.0, 0.22, 0.20],
-            [32, 1.0, 0.14, 0.07],
-            [50, 1.0, 0.09, 0.032],
-            [65, 1.0, 0.07, 0.017],
-            [100, 1.0, 0.045, 0.0075],
-            [160, 1.0, 0.027, 0.0028],
-            [200, 1.0, 0.022, 0.0019],
-            [325, 1.0, 0.014, 0.0007],
-            [600, 1.0, 0.007, 0.0002],
-            [3250, 1.0, 0.0014, 0.000007]
-        ]
+        self.attenuation = attenuation
 
     def setAttenuationByTableVals(self, index: int):
         "Set attenuation values by table"
@@ -217,6 +220,7 @@ class QtPointLightSource(PurePointLightSource):
         self.attenConst = row[1]
         self.attenLinear = row[2]
         self.attenQuad = row[3]
+        self.attenuation = QVector3D(row[1], row[2], row[3])
 
     def setAttenuationByDistance(self,
                                  distance: float):
@@ -235,6 +239,10 @@ class QtPointLightSource(PurePointLightSource):
                 self.setAttenuationByTableVals(i)
                 return
 
+    def setAttenuation(self, **kwargs):
+        "set attenuation"
+        self.attenuation = kwargs["vec"]
+
     def setColor(self):
         "Set light source color using coeffs and intensities"
         #
@@ -244,47 +252,116 @@ class QtPointLightSource(PurePointLightSource):
             self.intensity.z() * self.coeffs.z()
         )
 
-    def setIntensity(self, channel: str,
-                     val: float):
+    def setIntensity(self, **kwargs):
         "Set channel intensity to val"
+        if "vec" in kwargs:
+            self.intensity = vec
+            self.setColor()
+            return
+
+        name = kwargs['channel']
+        val = kwargs['val']
         assert val >= 0.0 and val <= 255.0
-        channel = channel.lower()
-        if channel == "red" or channel == "r":
+        name = name.lower()
+        if name == "red" or name == "r":
             self.intensity.setX(val)
-        elif channel == "green" or channel == "g":
+        elif name == "green" or name == "g":
             self.intensity.setY(val)
-        elif channel == "blue" or channel == "b":
+        elif name == "blue" or name == "b":
             self.intensity.setZ(val)
         else:
-            mess = "Unknown channel name " + channel
+            mess = "Unknown channel name " + name
             mess += ", available channels are: "
             mess += "red, green, blue"
             raise ValueError(mess)
         self.setColor()
 
-    def setCoeffs(self, channel: str,
-                  val: float):
+    def setCoeffs(self, **kwargs):
         "Set coefficient to given intesity"
+        if "vec" in kwargs:
+            self.coeffs = kwargs['vec']
+            self.setColor()
+            return
+        name = kwargs['channel']
+        val = kwargs['val']
         assert val >= 0.0 and val <= 1.0
-        channel = channel.lower()
-        if channel == "red" or channel == "r":
+        name = name.lower()
+        if name == "red" or name == "r":
             self.coeffs.setX(val)
-        elif channel == "green" or channel == "g":
+        elif name == "green" or name == "g":
             self.coeffs.setY(val)
-        elif channel == "blue" or channel == "b":
+        elif name == "blue" or name == "b":
             self.coeffs.setZ(val)
         else:
-            mess = "Unknown channel name " + channel
+            mess = "Unknown channel name " + name
             mess += ", available channels are: "
             mess += "red, green, blue"
             raise ValueError(mess)
         self.setColor()
+
+    def getCoeffAverage(self):
+        "get average value for coefficients"
+        red, green = self.coeffs.x(), self.coeffs.y()
+        blue = self.coeffs.z()
+        return (red + green + blue) / 3
+
+    def setPosition(self, **kwargs):
+        "position as vector"
+        if 'vec' in kwargs:
+            self.position = kwargs['vec']
+            return
+        x, y, z = kwargs['x'], kwargs['y'], kwargs['z']
+        self.position = QVector3D(x, y, z)
+
+    def setDirection(self, **kwargs):
+        "direction"
+        if "vec" in kwargs:
+            self.direction = kwargs['vec']
+            return
+        x, y, z = kwargs['x'], kwargs['y'], kwargs['z']
+        self.direction = QVector3D(x, y, z)
+
+    def fromPureLightSource(self, light: PureLightSource):
+        ""
+        self.setPosition(**light.position)
+        self.setDirection(**light.direction)
+        self.setIntensity("r", light.intensity['r'])
+        self.setIntensity("g", light.intensity['g'])
+        self.setIntensity("b", light.intensity['b'])
+        self.setAttenuation(light.attenConst,
+                            light.attenLinear,
+                            light.attenQuad)
+        self.setCoeffs("r", light.coeffs["r"])
+        self.setCoeffs("g", light.coeffs["g"])
+        self.setCoeffs("b", light.coeffs["b"])
+        self.cutOff = light.cutOff
+
+    def toPureLightSource(self):
+        ""
+        light = PureLightSource()
+        light.setPosition(x=self.position.x(),
+                          y=self.position.y(),
+                          z=self.position.z())
+        light.setDirection(x=self.direction.x(),
+                           y=self.direction.y(),
+                           z=self.direction.z())
+        light.setCutOff(self.cutOff)
+        light.setAttenuation(aConst=self.attenuation.x(),
+                             aLin=self.attenuation.y(),
+                             aQuad=self.attenuation.z())
+        light.setCoeffs(channel='r', val=self.coeffs.x())
+        light.setCoeffs(channel='g', val=self.coeffs.y())
+        light.setCoeffs(channel='b', val=self.coeffs.z())
+        light.setIntensity(channel="r", val=self.intensity.x())
+        light.setIntensity(channel="g", val=self.intensity.y())
+        light.setIntensity(channel="b", val=self.intensity.z())
+        return light
 
 
 class PureLambertianReflector:
     "Object that computes lambertian reflection"
 
-    def __init__(self, lightSource: PurePointLightSource,
+    def __init__(self, lightSource: PureLightSource,
                  objDiffuseReflectionCoefficientRed: float,
                  objDiffuseReflectionCoefficientGreen: float,
                  objDiffuseReflectionCoefficientBlue: float,
@@ -325,8 +402,8 @@ class PureLambertianReflectorAmbient(PureLambertianReflector):
     "Pure python implementation of lambertian reflector with ambient light"
 
     def __init__(self,
-                 lightSource: PurePointLightSource,
-                 ambientLight: PurePointLightSource,
+                 lightSource: PureLightSource,
+                 ambientLight: PureLightSource,
                  objDiffuseReflectionCoefficientRed: float,
                  objDiffuseReflectionCoefficientGreen: float,
                  objDiffuseReflectionCoefficientBlue: float,
@@ -349,7 +426,9 @@ class PureLambertianReflectorAmbient(PureLambertianReflector):
         self.reflection = {"r": red, "g": green, "b": blue}
 
 
-class PureLight:
+class PureShaderLight:
+    "Shader light object for illumination"
+
     def __init__(self,
                  posx=0.0,
                  posy=1.0,
@@ -357,16 +436,13 @@ class PureLight:
                  dirx=0.0,
                  diry=-1.0,
                  dirz=-0.1,
-                 ambientRed=1.0,
-                 ambientBlue=1.0,
-                 ambientGreen=1.0,
-                 diffuseRed=1.0,
-                 diffuseBlue=1.0,
-                 diffuseGreen=1.0,
-                 specularRed=1.0,
-                 specularGreen=1.0,
-                 specularBlue=1.0,
-                 ):
+                 attenuationConstant=1.0,
+                 attenuationLinear=0.7,
+                 attenuationQuadratic=1.8,
+                 cutOff=math.cos(math.radians(12.5)),
+                 ambient=PureLightSource(),
+                 diffuse=PureLightSource(),
+                 specular=PureLightSource()):
         ""
         self.position = {"x": posx,
                          "y": posy,
@@ -374,128 +450,200 @@ class PureLight:
         self.direction = {"x": dirx,
                           "y": diry,
                           "z": dirz}
-        self.ambient = {"r": ambientRed,
-                        "g": ambientGreen,
-                        "b": ambientBlue}
-        self.diffuse = {"r": diffuseRed,
-                        "g": diffuseGreen,
-                        "b": diffuseBlue}
-        self.specular = {"r": specularRed,
-                         "g": specularGreen,
-                         "b": specularBlue}
-
-    def getSpecular(self):
-        return (self.specular["r"],
-                self.specular["g"],
-                self.specular["b"])
+        self.attenConst = attenuationConstant
+        self.attenLinear = attenuationLinear
+        self.attenQuad = attenuationQuadratic
+        self.ambient = ambient
+        diffuse.setPosition(x=posx, y=posy, z=posz)
+        diffuse.setDirection(x=dirx, y=diry, z=dirz)
+        diffuse.setAttenuation(
+            aConst=attenuationConstant,
+            aLin=attenuationLinear,
+            aQuad=attenuationQuadratic)
+        self.diffuse = diffuse
+        specular.setPosition(x=posx, y=posy, z=posz)
+        specular.setDirection(x=dirx, y=diry, z=dirz)
+        specular.setAttenuation(
+            aConst=attenuationConstant,
+            aLin=attenuationLinear,
+            aQuad=attenuationQuadratic)
+        self.specular = specular
+        self.cutOff = cutOff
+        self.specular.setCutOff(cutOff)
+        self.diffuse.setCutOff(cutOff)
 
     def getPosition(self):
         return (self.position["x"],
                 self.position["y"],
                 self.position["z"])
 
+    def setPosition(self, **kwargs):
+        "set position"
+        x, y, z = kwargs['x'], kwargs['y'], kwargs['z']
+        self.position = {"x": x, "y": y, "z": z}
+        self.diffuse.setPosition(**kwargs)
+        self.specular.setPosition(**kwargs)
+
     def getDirection(self):
         return (self.direction["x"],
                 self.direction["y"],
                 self.direction["z"])
 
-    def getAmbient(self):
-        return (self.ambient["r"],
-                self.ambient["g"],
-                self.ambient["b"])
+    def setDirection(self, **kwargs):
+        ""
+        x, y, z = kwargs['x'], kwargs['y'], kwargs['z']
+        self.direction = {"x": x, "y": y, "z": z}
+        self.diffuse.setDirection(**kwargs)
+        self.specular.setDirection(**kwargs)
 
-    def getDiffuse(self):
-        return (self.diffuse["r"],
-                self.diffuse["g"],
-                self.diffuse["b"])
+    def getSpecularColor(self):
+        return (self.specular.color["r"],
+                self.specular.color["g"],
+                self.specular.color["b"])
+
+    def getAmbientColor(self):
+        return (self.ambient.color["r"],
+                self.ambient.color["g"],
+                self.ambient.color["b"])
+
+    def getDiffuseColor(self):
+        return (self.diffuse.color["r"],
+                self.diffuse.color["g"],
+                self.diffuse.color["b"])
 
     def getCutOff(self):
         return self.cutOff
 
+    def setCutOff(self, val: float):
+        ""
+        self.cutOff = val
+        self.diffuse.setCutOff(val)
+        self.specular.setCutOff(val)
 
-class QtLight:
-    "Light"
+    def setIntensity(self,
+                     colorType="all",
+                     **kwargs):
+        ""
+        colorType = colorType.lower()
+        if colorType == "specular":
+            self.specular.setIntensity(**kwargs)
+        elif colorType == "diffuse":
+            self.diffuse.setIntensity(**kwargs)
+        elif colorType == "all":
+            self.diffuse.setIntensity(**kwargs)
+            self.specular.setIntensity(**kwargs)
+        else:
+            mess = "Unknown color type " + colorType
+            mess += " known types are specular diffuse"
+            raise ValueError(mess)
+
+    def setCoeffs(self, colorType="all",
+                  **kwargs):
+        "Set intensity coefficients"
+        colorType = colorType.lower()
+        if colorType == "specular":
+            self.specular.setCoeffs(**kwargs)
+        elif colorType == "diffuse":
+            self.diffuse.setCoeffs(**kwargs)
+        elif colorType == "all":
+            self.specular.setCoeffs(**kwargs)
+            self.diffuse.setCoeffs(**kwargs)
+        else:
+            mess = "Unknown color type " + colorType
+            mess += " known types are specular, diffuse, all"
+            raise ValueError(mess)
+
+    def setAttenuation(self, colorType="all",
+                       **kwargs):
+        ""
+        colorType = colorType.lower()
+        if colorType == "specular":
+            self.specular.setAttenuation(**kwargs)
+        elif colorType == "diffuse":
+            self.diffuse.setAttenuation(**kwargs)
+        elif colorType == "all":
+            self.specular.setAttenuation(**kwargs)
+            self.diffuse.setAttenuation(**kwargs)
+        else:
+            mess = "Unknown color type " + colorType
+            mess += " known types are specular, diffuse, all"
+            raise ValueError(mess)
+
+
+class QtShaderLight(PureShaderLight):
+    "Qt shader light object"
 
     def __init__(self,
                  position=QVector3D(0.0, 1.0, 0.0),
                  direction=QVector3D(0.0, -1.0, -0.1),
-                 ambient=QColor(1.0, 1.0, 1.0),
-                 diffuse=QColor(1.0, 1.0, 1.0),
-                 specular=QColor(1.0, 1.0, 1.0),
                  cutOff=math.cos(math.radians(12.5)),
-                 attenuationConstant=1.0,
-                 attenuationLinear=0.7,
-                 attenuationQuadratic=1.8
-                 ):
+                 attenuation=QVector3D(1.0, 0.7, 1.8),
+                 ambient=QtLightSource(),
+                 diffuse=QtLightSource(),
+                 specular=QtLightSource()):
         ""
+        super().__init__(
+            posx=position.x(),
+            posy=position.y(),
+            posz=position.z(),
+            dirx=direction.x(),
+            diry=direction.y(),
+            dirz=direction.z(),
+            cutOff=cutOff,
+            attenuationConstant=attenuation.x(),
+            attenuationLinear=attenuation.y(),
+            attenuationQuadratic=attenuation.z(),
+            ambient=ambient.toPureLightSource(),
+            diffuse=QtLightSource().toPureLightSource(),
+            specular=QtLightSource().toPureLightSource()
+        )
         self.position = position
         self.direction = direction
-        self.ambient = ambient
-        self.diffuse = diffuse
-        self.specular = specular
         self.cutOff = cutOff
-        self.attenVals = [
-            #distance, attenConst, attenLin, attenQaud
-            [7, 1.0, 0.7, 1.8],
-            [13, 1.0, 0.35, 0.44],
-            [20, 1.0, 0.22, 0.20],
-            [32, 1.0, 0.14, 0.07],
-            [50, 1.0, 0.09, 0.032],
-            [65, 1.0, 0.07, 0.017],
-            [100, 1.0, 0.045, 0.0075],
-            [160, 1.0, 0.027, 0.0028],
-            [200, 1.0, 0.022, 0.0019],
-            [325, 1.0, 0.014, 0.0007],
-            [600, 1.0, 0.007, 0.0002],
-            [3250, 1.0, 0.0014, 0.000007]
-        ]
+        self.ambient = ambient
+        #
+        self.diffuse = diffuse
+        self.diffuse.setPosition(vec=position)
+        self.diffuse.setDirection(vec=direction)
+        self.diffuse.setAttenuation(vec=attenuation)
+        self.diffuse.setCutOff(cutOff)
+        #
+        self.specular = specular
+        self.specular.setPosition(vec=position)
+        self.specular.setDirection(vec=direction)
+        self.specular.setAttenuation(vec=attenuation)
+        self.specular.setCutOff(cutOff)
+        #
+        self.attenuation = attenuation
 
-    def toPureLight(self):
-        "Transform to pure python"
-        return PureLight(
-            posx=self.position.x(),
-            posy=self.position.y(),
-            posz=self.position.z(),
-            dirx=self.position.x(),
-            diry=self.position.y(),
-            dirz=self.position.z(),
-            ambientRed=self.ambient.red(),
-            ambientBlue=self.ambient.blue(),
-            ambientGreen=self.ambient.green(),
-            diffuseRed=self.diffuse.red(),
-            diffuseBlue=self.diffuse.blue(),
-            diffuseGreen=self.diffuse.green(),
-            specularRed=self.specular.red(),
-            specularGreen=self.specular.green(),
-            specularBlue=self.specular.blue(),
-            cutOff=self.cutOff
-        )
-
-    def fromPureLight(self, light: PureLight):
+    def setPosition(self, **kwargs):
         ""
-        self.position = QVector3D(
-            light.position["x"],
-            light.position["y"],
-            light.position["z"]
-        )
-        self.direction = QVector3D(
-            light.direction["x"],
-            light.direction["y"],
-            light.direction["z"]
-        )
-        self.ambient = QColor(
-            light.ambient["r"],
-            light.ambient["g"],
-            light.ambient["b"]
-        )
-        self.diffuse = QColor(
-            light.diffuse["r"],
-            light.diffuse["g"],
-            light.diffuse["b"]
-        )
-        self.specular = QColor(
-            light.specular["r"],
-            light.specular["g"],
-            light.specular["b"]
-        )
-        self.cutOff = light.cutOff
+        self.position = kwargs['vec']
+        self.diffuse.setPosition(**kwargs)
+        self.specular.setPosition(**kwargs)
+
+    def setDirection(self, **kwargs):
+        ""
+        self.direction = kwargs['vec']
+        self.diffuse.setDirection(**kwargs)
+        self.specular.setDirection(**kwargs)
+
+    def getDiffuseColor(self):
+        ""
+        return self.diffuse.color
+
+    def getAmbientColor(self):
+        ""
+        return self.ambient.color
+
+    def getSpecularColor(self):
+        ""
+        return self.specular.color
+
+    def getPosition(self):
+        ""
+        return self.position
+
+    def getDirection(self):
+        ""
+        return self.direction
