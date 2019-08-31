@@ -42,6 +42,7 @@ class LightsAppWindow(AppWindow):
         #
         self.lastCamYVal = self.camY.value()
 
+
     def moveGLCamera(self, direction: str):
         self.glWidget.moveCamera(direction)
 
