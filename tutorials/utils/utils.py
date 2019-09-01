@@ -2,6 +2,7 @@
 # some util functions
 
 import numpy as np
+import math
 
 from PySide2.QtGui import QVector3D
 from PySide2.QtGui import QVector4D
@@ -230,3 +231,113 @@ def arr2qmat(arr: np.ndarray):
         mat4.setRow(rowNb, rowvec)
     #
     return mat4
+
+
+def move3dObjPure(direction: str,
+                  positionVector: (float, float, float),
+                  axvec1: (float, float, float),
+                  axvec2: (float, float, float),
+                  deltaTime: float, speed: float,
+                  availableMoves=["forward", "backward", "left", "right"],
+                  ):
+    ""
+    velocity = speed * deltaTime
+    direction = direction.lower()
+    if direction not in availableMoves:
+        raise ValueError(
+            "Unknown direction {0}, available moves are {1}".format(
+                direction, availableMoves
+            )
+        )
+    if direction == "forward":
+        multip = scalar2vecMult(axvec1,
+                                velocity)
+        positionVector = vec2vecAdd(positionVector,
+                                    multip)
+    elif direction == "backward":
+        multip = scalar2vecMult(axvec1,
+                                velocity)
+        positionVector = vec2vecSubs(positionVector,
+                                     multip)
+    elif direction == "right":
+        multip = scalar2vecMult(axvec2,
+                                velocity)
+        positionVector = vec2vecAdd(positionVector,
+                                    multip)
+    elif direction == "left":
+        multip = scalar2vecMult(axvec2,
+                                velocity)
+        positionVector = vec2vecSubs(positionVector,
+                                     multip)
+    return positionVector
+
+
+def move3dObjQt(direction: str,
+                positionVector: QVector3D,
+                axvec1: QVector3D,
+                axvec2: QVector3D,
+                deltaTime: float, speed: float,
+                availableMoves=["forward", "backward", "left", "right"]
+                ):
+    ""
+    velocity = speed * deltaTime
+    direction = direction.lower()
+    if direction not in availableMoves:
+        raise ValueError(
+            "Unknown direction {0}, available moves are {1}".format(
+                direction, availableMoves
+            )
+        )
+    if direction == "forward":
+        positionVector += axvec1 * velocity
+    elif direction == "backward":
+        positionVector -= axvec1 * velocity
+    elif direction == "right":
+        positionVector += axvec2 * velocity
+    elif direction == "left":
+        positionVector -= axvec2 * velocity
+
+    return positionVector
+
+
+def computeFrontRightPure(yaw: float,
+                          pitch: float,
+                          worldUp=(0.0, 1.0, 0.0)):
+    "Compute front vector"
+    yawRadian = math.radians(yaw)
+    yawCos = math.cos(yawRadian)
+    pitchRadian = math.radians(pitch)
+    pitchCos = math.cos(pitchRadian)
+    frontX = yawCos * pitchCos
+    frontY = math.sin(pitchRadian)
+    frontZ = math.sin(yawRadian) * pitchCos
+    front = (frontX, frontY, frontZ)
+    front = normalize_tuple(front)
+    right = crossProduct(front,
+                         worldUp)
+    right = normalize_tuple(right)
+    up = crossProduct(right, front)
+    up = normalize_tuple(up)
+    return (front, right, up)
+
+
+def computeFrontRightQt(
+        yaw: float,
+        pitch: float,
+        worldUp=QVector3D(0.0, 1.0, 0.0)):
+    ""
+    yawRadian = math.radians(yaw)
+    yawCos = math.cos(yawRadian)
+    pitchRadian = math.radians(pitch)
+    pitchCos = math.cos(pitchRadian)
+    frontX = yawCos * pitchCos
+    frontY = math.sin(pitchRadian)
+    frontZ = math.sin(yawRadian) * pitchCos
+    front = QVector3D(frontX, frontY, frontZ)
+    front.normalize()
+    right = QVector3D.crossProduct(front,
+                                   worldUp)
+    right.normalize()
+    up = QVector3D.crossProduct(right, front)
+    up.normalize()
+    return (front, right, up)

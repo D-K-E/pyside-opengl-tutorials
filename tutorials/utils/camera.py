@@ -9,6 +9,8 @@ from tutorials.utils.utils import crossProduct
 from tutorials.utils.utils import scalar2vecMult
 from tutorials.utils.utils import vec2vecAdd
 from tutorials.utils.utils import vec2vecSubs
+from tutorials.utils.utils import move3dObjPure
+from tutorials.utils.utils import move3dObjQt
 from PySide2.QtGui import QVector3D
 from PySide2.QtGui import QMatrix4x4
 from PySide2.QtGui import QVector4D
@@ -18,22 +20,30 @@ class PureCamera:
     "A camera that is in pure python for 3d movement"
 
     def __init__(self):
-        self.availableMoves = ["forward", "backward", "left", "right"]
-        # Camera attributes
+        ""
+        # camera properties
         self.position = (0.0, 0.0, 0.0)
-        self.front = (0.0, 0.0, -1.0)
-        self.up = (0.0, 1.0, 0.0)
-        self.right = (0.0, 0.0, 0.0)
-        self.worldUp = (0.0, 0.0, 0.0)
+        self.front = None
+        self.worldUp = (0.0, 1.0, 0.0)
+        self.up = None
+        self.right = None
 
-        # Euler Angles for rotation
+        # euler angles
         self.yaw = -90.0
         self.pitch = 0.0
+        self.roll = 0.0
 
-        # camera options
+        # movement speed, sensitivity, moves, zoom
+        self.movementSensitivity = 0.001
         self.movementSpeed = 2.5
-        self.movementSensitivity = 0.00001
         self.zoom = 45.0
+        self.availableMoves = ["forward",
+                               "backward",
+                               "left",
+                               "right"]
+
+        # update camera vectors
+        self.updateCameraVectors()
 
     def updateCameraVectors(self):
         "Update the camera vectors and compute a new front"
@@ -57,34 +67,12 @@ class PureCamera:
 
     def move(self, direction: str, deltaTime: float):
         ""
-        velocity = self.movementSpeed * deltaTime
-        direction = direction.lower()
-        if direction not in self.availableMoves:
-            raise ValueError(
-                "Unknown direction {0}, available moves are {1}".format(
-                    direction, self.availableMoves
-                )
-            )
-        if direction == "forward":
-            multip = scalar2vecMult(self.front,
-                                    velocity)
-            self.position = vec2vecAdd(self.position,
-                                       multip)
-        elif direction == "backward":
-            multip = scalar2vecMult(self.front,
-                                    velocity)
-            self.position = vec2vecSubs(self.position,
-                                        multip)
-        elif direction == "right":
-            multip = scalar2vecMult(self.right,
-                                    velocity)
-            self.position = vec2vecAdd(self.position,
-                                       multip)
-        elif direction == "left":
-            multip = scalar2vecMult(self.right,
-                                    velocity)
-            self.position = vec2vecSubs(self.position,
-                                        multip)
+        self.position = move3dObjPure(direction=direction,
+                                      deltaTime=deltaTime,
+                                      positionVector=self.position,
+                                      axvec1=self.front,
+                                      axvec2=self.right,
+                                      availableMoves=self.availableMoves)
 
     def lookAround(self,
                    xoffset: float,
@@ -170,6 +158,13 @@ class PureCamera:
                               self.front),
             worldUp=self.worldUp
         )
+    def __str__(self):
+        "string representation"
+        mess = "Camera: position {0},\n yaw: {1},\n pitch: {2},\n world up:{3}"
+        mes = mess.format(str(self.position), str(self.yaw),
+                          str(self.pitch), str(self.worldUp)
+                          )
+        return  mes
 
 
 class QtCamera:
@@ -216,22 +211,15 @@ class QtCamera:
 
     def move(self, direction: str, deltaTime: float):
         ""
-        velocity = self.movementSpeed * deltaTime
-        direction = direction.lower()
-        if direction not in self.availableMoves:
-            raise ValueError(
-                "Unknown direction {0}, available moves are {1}".format(
-                    direction, self.availableMoves
-                )
-            )
-        if direction == "forward":
-            self.position += self.front * velocity
-        elif direction == "backward":
-            self.position -= self.front * velocity
-        elif direction == "right":
-            self.position += self.right * velocity
-        elif direction == "left":
-            self.position -= self.right * velocity
+        self.position = move3dObjQt(
+            direction=direction,
+            deltaTime=deltaTime,
+            speed=self.movementSpeed,
+            positionVector=self.position,
+            axvec1=self.front,
+            axvec2=self.right,
+            availableMoves=self.availableMoves
+        )
 
     def lookAround(self,
                    xoffset: float,
@@ -310,6 +298,15 @@ class QtCamera:
         self.movementSensitivity = sensitivity
         self.zoom = zoom
         self.updateCameraVectors()
+
+    def __str__(self):
+        "string representation"
+        mess = "Camera: position {0}, yaw: {1}, pitch: {2}, world up:{3}"
+        mes = mess.format(str(self.position), str(self.yaw),
+                          str(self.pitch), str(self.worldUp)
+                          )
+        return  mes
+
 
 
 class FPSCameraQt(QtCamera):

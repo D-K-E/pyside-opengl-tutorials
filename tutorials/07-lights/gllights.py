@@ -7,6 +7,7 @@ import sys
 import ctypes
 from tutorials.utils.camera import QtCamera
 from tutorials.utils.light import QtShaderLight
+from tutorials.utils.utils import move3dObjQt
 
 from PySide2.QtGui import QVector3D
 from PySide2.QtGui import QImage
@@ -17,8 +18,6 @@ from PySide2.QtGui import QOpenGLShader
 from PySide2.QtGui import QOpenGLContext
 from PySide2.QtGui import QOpenGLTexture
 from PySide2.QtGui import QMatrix4x4
-from PySide2.QtGui import QVector4D
-from PySide2.QtGui import QColor
 
 from PySide2.QtWidgets import QApplication
 from PySide2.QtWidgets import QMessageBox
@@ -274,11 +273,18 @@ class LightsGL(QOpenGLWidget):
     def changeShininess(self, val: float):
         "set a new shininess value to cube fragment shader"
         self.shininess = val
+        self.update()
 
-    def setLightPos(self, xval: float,
-                    yval: float, zval: float):
-        ""
-        newpos = QVector3D(xval, yval, zval)
+    def moveLight(self,
+                  xoffset: float,
+                  yoffset: float,
+                  zoffset: float):
+        "Translate light position vector to a new position"
+        currentPos = self.lamp.position
+        translationVec = QVector3D(xoffset,
+                                   yoffset,
+                                   zoffset)
+        newpos = currentPos + translationVec
         self.lamp.setPosition(vec=newpos)
         self.update()
 
@@ -326,9 +332,10 @@ class LightsGL(QOpenGLWidget):
     def changeAmbientLightIntensity(self, xval: float,
                                     yval: float, zval: float):
         ""
-        self.lamp.ambient.setIntensity(vec=QVector3D(xval,
-                                                     yval,
-                                                     zval))
+        self.lamp.ambient.setIntensity(
+            vec=QVector3D(xval,
+                          yval,
+                          zval))
         self.update()
 
     def changeAmbientLightCoeffs(self, xval: float, yval: float,
@@ -394,13 +401,12 @@ class LightsGL(QOpenGLWidget):
                                      self.shininess)
         self.program.setUniformValue("light.position",
                                      self.lamp.position)
-        self.program.setUniformValue("light.direction", self.lamp.direction)
+        self.program.setUniformValue("light.direction",
+                                     self.lamp.direction)
         self.program.setUniformValue("light.ambient",
                                      self.lamp.ambient.intensity)
         self.program.setUniformValue("light.diffuse",
                                      self.lamp.diffuse.intensity)
-        self.program.setUniformValue("light.specular",
-                                     self.lamp.specular.intensity)
         self.program.setUniformValue("coeffs.ambient",
                                      self.lamp.ambient.getCoeffAverage())
         self.program.setUniformValue("coeffs.diffuse",
@@ -556,8 +562,10 @@ class LightsGL(QOpenGLWidget):
         # uniforms related position and light would be changed during the
         # drawing since we are handling events as well but we should set
         # those that are related material right away
+        print("program uniform initialize")
         self.program.setUniformValue("material.diffuseMap", self.texUnit1)
         self.program.setUniformValue("material.specularMap", self.texUnit2)
+        print("program uniform initialize end")
         # end cube shader
         # end shaders
 
@@ -604,8 +612,10 @@ class LightsGL(QOpenGLWidget):
 
         # deal with textures
         # first texture
+        print("set texture 1")
         self.texture1_proc()
         # second texture
+        print("set texture 2")
         self.texture2_proc()
         #
         self.lampVbo.release()
@@ -622,8 +632,7 @@ class LightsGL(QOpenGLWidget):
         )
         # cubes
         # bind necessary
-        self.vao.bind()
-        self.vbo.bind()
+        vaoBind = QOpenGLVertexArrayObject.Binder(self.vao)
         # bind the shader program
         self.program.bind()
         # set uniforms
@@ -639,13 +648,12 @@ class LightsGL(QOpenGLWidget):
                 36
             )
         # unbind necessary
-        self.vbo.release()
+        vaoBind = None
         self.program.release()
         # #### lamp
         #
         # bind necessary
         self.lampVao.bind()
-        self.lampVbo.bind()
         #
         # bind shader program
         self.lampProgram.bind()

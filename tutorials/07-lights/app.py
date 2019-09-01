@@ -28,9 +28,12 @@ class LightsAppWindow(AppWindow):
         self.ySlider.valueChanged.connect(self.rotateCubes)
         self.zSlider.valueChanged.connect(self.rotateCubes)
         #
-        self.lightPosXSlider.valueChanged.connect(self.setLightPos)
-        self.lightPosYSlider.valueChanged.connect(self.setLightPos)
-        self.lightPosZSlider.valueChanged.connect(self.setLightPos)
+        self.lightPosForward.clicked.connect(self.moveLightPosForward)
+        self.lightPosBackward.clicked.connect(self.moveLightPosBackward)
+        self.lightPosRight.clicked.connect(self.moveLightPosRight)
+        self.lightPosLeft.clicked.connect(self.moveLightPosLeft)
+        self.lightPosUp.clicked.connect(self.moveLightPosUp)
+        self.lightPosDown.clicked.connect(self.moveLightPosDown)
         #
         self.lightRotXSlider.valueChanged.connect(self.rotateLights)
         self.lightRotYSlider.valueChanged.connect(self.rotateLights)
@@ -38,10 +41,64 @@ class LightsAppWindow(AppWindow):
         #
         self.angleSpin.valueChanged.connect(self.setAngle)
         self.cutOff.valueChanged.connect(self.setCutOff)
+        self.shininessSpin.valueChanged.connect(self.setShininess)
+        #
         self.lastCamXVal = self.camX.value()
         #
         self.lastCamYVal = self.camY.value()
-
+        #
+        #
+        self.lastLightRotXVal = self.lightRotXSlider.value()
+        self.lastLightRotYVal = self.lightRotYSlider.value()
+        self.lastLightRotZVal = self.lightRotZSlider.value()
+        #
+        # set ambient color
+        self.ambientIntensityBlue.valueChanged.connect(
+            self.changeAmbientIntensity)
+        self.ambientIntensityBlueCoeff.valueChanged.connect(
+            self.changeAmbientCoeff)
+        self.ambientIntensityRed.valueChanged.connect(
+            self.changeAmbientIntensity)
+        self.ambientIntensityRedCoeff.valueChanged.connect(
+            self.changeAmbientCoeff)
+        self.ambientIntensityBlue.valueChanged.connect(
+            self.changeAmbientIntensity)
+        self.ambientIntensityBlueCoeff.valueChanged.connect(
+            self.changeAmbientCoeff)
+        #
+        # set specular color
+        self.specularIntensityBlue.valueChanged.connect(
+            self.changeSpecularIntensity)
+        self.specularIntensityBlueCoeff.valueChanged.connect(
+            self.changeSpecularCoeffs)
+        self.specularIntensityGreen.valueChanged.connect(
+            self.changeSpecularIntensity)
+        self.specularIntensityGreenCoeff.valueChanged.connect(
+            self.changeSpecularCoeffs)
+        self.specularIntensityRed.valueChanged.connect(
+            self.changeSpecularIntensity)
+        self.specularIntensityRedCoeff.valueChanged.connect(
+            self.changeSpecularCoeffs)
+        #
+        # set diffuse color
+        self.diffuseIntensityBlue.valueChanged.connect(
+            self.changeDiffuseIntensity)
+        self.diffuseIntensityRed.valueChanged.connect(
+            self.changeDiffuseIntensity)
+        self.diffuseIntensityGreen.valueChanged.connect(
+            self.changeDiffuseIntensity)
+        self.diffuseIntensityBlueCoeff.valueChanged.connect(
+            self.changeDiffuseCoeffs)
+        self.diffuseIntensityRedCoeff.valueChanged.connect(
+            self.changeDiffuseCoeffs)
+        self.diffuseIntensityGreenCoeff.valueChanged.connect(
+            self.changeDiffuseCoeffs)
+        #
+        # attenuation
+        self.attenConstant.valueChanged.connect(self.changeAttenuation)
+        self.attenLinear.valueChanged.connect(self.changeAttenuation)
+        self.attenQuadratic.valueChanged.connect(self.changeAttenuation)
+        #
 
     def moveGLCamera(self, direction: str):
         self.glWidget.moveCamera(direction)
@@ -92,11 +149,59 @@ class LightsAppWindow(AppWindow):
         angl = self.angleSpin.value()
         self.glWidget.setRotationAngle(angl)
 
-    def setLightPos(self):
-        rx = self.lightPosXSlider.value()
-        ry = self.lightPosYSlider.value()
-        rz = self.lightPosZSlider.value()
-        self.glWidget.setLightPos(rx, ry, rz)
+    def moveLightPosForward(self):
+        ""
+        offsetx = 0.0
+        offsety = 0.0
+        offsetz = -0.5
+        self.glWidget.moveLight(xoffset=offsetx,
+                                yoffset=offsety,
+                                zoffset=offsetz)
+
+    def moveLightPosBackward(self):
+        ""
+        offsetx = 0.0
+        offsety = 0.0
+        offsetz = 0.5
+        self.glWidget.moveLight(xoffset=offsetx,
+                                yoffset=offsety,
+                                zoffset=offsetz)
+
+    def moveLightPosLeft(self):
+        ""
+        offsetx = -1.0
+        offsety = 0.0
+        offsetz = 0.0
+        self.glWidget.moveLight(xoffset=offsetx,
+                                yoffset=offsety,
+                                zoffset=offsetz)
+
+    def moveLightPosRight(self):
+        ""
+        offsetx = 0.5
+        offsety = 0.0
+        offsetz = 0.0
+        self.glWidget.moveLight(xoffset=offsetx,
+                                yoffset=offsety,
+                                zoffset=offsetz)
+
+    def moveLightPosUp(self):
+        ""
+        offsetx = 0.0
+        offsety = 0.5
+        offsetz = 0.0
+        self.glWidget.moveLight(xoffset=offsetx,
+                                yoffset=offsety,
+                                zoffset=offsetz)
+
+    def moveLightPosDown(self):
+        ""
+        offsetx = 0.0
+        offsety = -0.5
+        offsetz = 0.0
+        self.glWidget.moveLight(xoffset=offsetx,
+                                yoffset=offsety,
+                                zoffset=offsetz)
 
     def rotateLights(self):
         rx = self.lightRotXSlider.value()

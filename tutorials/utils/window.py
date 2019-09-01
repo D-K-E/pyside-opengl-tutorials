@@ -4,6 +4,7 @@ from PySide2.QtWidgets import QLabel
 from PySide2.QtWidgets import QVBoxLayout
 from PySide2.QtWidgets import QHBoxLayout
 from PySide2.QtWidgets import QWidget
+from PySide2.QtWidgets import QPushButton
 
 
 def createSlider():
@@ -77,6 +78,10 @@ class GLWindow(QtWidgets.QMainWindow):
         # Rotate camera
         self.camX = createSlider()
         self.camY = createSlider()
+        self.camX.setRange(-180, 180)
+        self.camY.setRange(-180, 180)
+        self.camX.setValue(0)
+        self.camY.setValue(0)
         self.camlabelx = QLabel("x")
         self.camlabely = QLabel("y")
         self.camlabel = QLabel("Rotate camera")
@@ -157,27 +162,50 @@ class GLWindow(QtWidgets.QMainWindow):
         self.lightPosLayout = QVBoxLayout()
         lightPosWidgetsLayout = QHBoxLayout()
         #
-        self.lightPosXSlider = createSlider()
-        self.lightPosXTitle = QLabel("x")
-        posxLayout = QVBoxLayout()
-        posxLayout.addWidget(self.lightPosXTitle)
-        posxLayout.addWidget(self.lightPosXSlider)
+        # light pos buttons
+        self.lightPosForward = QPushButton()
+        self.lightPosForward.setText("Forward")
+        self.lightPosForward.setAutoRepeat(True)
+        self.lightPosForward.setAutoRepeatInterval(15)
+        self.lightPosForward.setAutoRepeatDelay(100)
+        self.lightPosBackward = QPushButton()
+        self.lightPosBackward.setText("Back")
+        self.lightPosBackward.setAutoRepeat(True)
+        self.lightPosBackward.setAutoRepeatInterval(15)
+        self.lightPosBackward.setAutoRepeatDelay(100)
+        self.lightPosRight = QPushButton()
+        self.lightPosRight.setText("Right")
+        self.lightPosRight.setAutoRepeat(True)
+        self.lightPosRight.setAutoRepeatInterval(15)
+        self.lightPosRight.setAutoRepeatDelay(100)
+        self.lightPosLeft = QPushButton()
+        self.lightPosLeft.setText("Left")
+        self.lightPosLeft.setAutoRepeat(True)
+        self.lightPosLeft.setAutoRepeatDelay(100)
+        self.lightPosLeft.setAutoRepeatInterval(15)
+        self.lightPosUp = QPushButton()
+        self.lightPosUp.setText("Up")
+        self.lightPosUp.setAutoRepeat(True)
+        self.lightPosUp.setAutoRepeatDelay(100)
+        self.lightPosUp.setAutoRepeatInterval(15)
+        self.lightPosDown = QPushButton()
+        self.lightPosDown.setText("Down")
+        self.lightPosDown.setAutoRepeat(True)
+        self.lightPosDown.setAutoRepeatDelay(100)
+        self.lightPosDown.setAutoRepeatInterval(15)
+        btnLV = QVBoxLayout()
+        btnLV2 = QVBoxLayout()
+        btnLH = QHBoxLayout()
+        btnLV2.addWidget(self.lightPosForward)
+        btnLV2.addWidget(self.lightPosBackward)
+        btnLV.addWidget(self.lightPosUp)
+        btnLV.addWidget(self.lightPosDown)
+        btnLH.addWidget(self.lightPosLeft)
+        btnLH.addLayout(btnLV2)
+        btnLH.addLayout(btnLV)
+        btnLH.addWidget(self.lightPosRight)
         #
-        self.lightPosYSlider = createSlider()
-        self.lightPosYTitle = QLabel("y")
-        posyLayout = QVBoxLayout()
-        posyLayout.addWidget(self.lightPosYTitle)
-        posyLayout.addWidget(self.lightPosYSlider)
-        #
-        self.lightPosZSlider = createSlider()
-        self.lightPosZTitle = QLabel("z")
-        poszLayout = QVBoxLayout()
-        poszLayout.addWidget(self.lightPosZTitle)
-        poszLayout.addWidget(self.lightPosZSlider)
-        #
-        lightPosWidgetsLayout.addLayout(posxLayout)
-        lightPosWidgetsLayout.addLayout(posyLayout)
-        lightPosWidgetsLayout.addLayout(poszLayout)
+        lightPosWidgetsLayout.addLayout(btnLH)
         self.lightPosLayout.addWidget(self.lightPosTitle)
         self.lightPosLayout.addLayout(lightPosWidgetsLayout)
         self.lightPosWidget.setLayout(self.lightPosLayout)
@@ -190,18 +218,24 @@ class GLWindow(QtWidgets.QMainWindow):
         lightRotWidgetsLayout = QHBoxLayout()
         #
         self.lightRotXSlider = createSlider()
+        self.lightRotXSlider.setRange(-180, 180)
+        self.lightRotXSlider.setValue(0)
         self.lightRotXTitle = QLabel("x")
         RotxLayout = QVBoxLayout()
         RotxLayout.addWidget(self.lightRotXTitle)
         RotxLayout.addWidget(self.lightRotXSlider)
         #
         self.lightRotYSlider = createSlider()
+        self.lightRotYSlider.setRange(-180, 180)
+        self.lightRotYSlider.setValue(0)
         self.lightRotYTitle = QLabel("y")
         RotyLayout = QVBoxLayout()
         RotyLayout.addWidget(self.lightRotYTitle)
         RotyLayout.addWidget(self.lightRotYSlider)
         #
         self.lightRotZSlider = createSlider()
+        self.lightRotZSlider.setRange(-180, 180)
+        self.lightRotZSlider.setValue(0)
         self.lightRotZTitle = QLabel("z")
         RotzLayout = QVBoxLayout()
         RotzLayout.addWidget(self.lightRotZTitle)
@@ -227,7 +261,7 @@ class GLWindow(QtWidgets.QMainWindow):
         ambientTitle = QLabel("ambient")
         ambientWidgetsLayout = QVBoxLayout()
         # ambient red
-        self.ambientIntensityRed = createDSpinBox(0.0, 255.0, 0.5, 255.0)
+        self.ambientIntensityRed = createDSpinBox(0.0, 1.0, 0.01, 1.0)
         self.ambientIntensityRedCoeff = createDSpinBox(0.0, 1.0, 0.05)
         intenCoeff = QHBoxLayout()
         intenCoeff.addWidget(self.ambientIntensityRed)
@@ -239,7 +273,7 @@ class GLWindow(QtWidgets.QMainWindow):
         ambientWidgetsLayout.addLayout(channelLayout)
         # end ambient red
         # ambient green
-        self.ambientIntensityGreen = createDSpinBox(0.0, 255.0, 0.5, 255.0)
+        self.ambientIntensityGreen = createDSpinBox(0.0, 1.0, 0.01, 1.0)
         self.ambientIntensityGreenCoeff = createDSpinBox(0.0, 1.0, 0.05)
         intenCoeff = QHBoxLayout()
         intenCoeff.addWidget(self.ambientIntensityGreen)
@@ -251,7 +285,7 @@ class GLWindow(QtWidgets.QMainWindow):
         ambientWidgetsLayout.addLayout(channelLayout)
         # end ambient green
         # ambient blue
-        self.ambientIntensityBlue = createDSpinBox(0.0, 255.0, 0.5, 255.0)
+        self.ambientIntensityBlue = createDSpinBox(0.0, 1.0, 0.01, 1.0)
         self.ambientIntensityBlueCoeff = createDSpinBox(0.0, 1.0, 0.05)
         intenCoeff = QHBoxLayout()
         intenCoeff.addWidget(self.ambientIntensityBlue)
@@ -274,7 +308,7 @@ class GLWindow(QtWidgets.QMainWindow):
         diffuseTitle = QLabel("diffuse")
         diffuseWidgetsLayout = QVBoxLayout()
         # diffuse red
-        self.diffuseIntensityRed = createDSpinBox(0.0, 255.0, 0.5, 255.0)
+        self.diffuseIntensityRed = createDSpinBox(0.0, 1.0, 0.01, 1.0)
         self.diffuseIntensityRedCoeff = createDSpinBox(0.0, 1.0, 0.05)
         intenCoeff = QHBoxLayout()
         intenCoeff.addWidget(self.diffuseIntensityRed)
@@ -286,7 +320,7 @@ class GLWindow(QtWidgets.QMainWindow):
         diffuseWidgetsLayout.addLayout(channelLayout)
         # end diffuse red
         # diffuse green
-        self.diffuseIntensityGreen = createDSpinBox(0.0, 255.0, 0.5, 255.0)
+        self.diffuseIntensityGreen = createDSpinBox(0.0, 1.0, 0.01, 1.0)
         self.diffuseIntensityGreenCoeff = createDSpinBox(0.0, 1.0, 0.05)
         intenCoeff = QHBoxLayout()
         intenCoeff.addWidget(self.diffuseIntensityGreen)
@@ -298,7 +332,7 @@ class GLWindow(QtWidgets.QMainWindow):
         diffuseWidgetsLayout.addLayout(channelLayout)
         # end diffuse green
         # diffuse blue
-        self.diffuseIntensityBlue = createDSpinBox(0.0, 255.0, 0.5, 255.0)
+        self.diffuseIntensityBlue = createDSpinBox(0.0, 1.0, 0.01, 1.0)
         self.diffuseIntensityBlueCoeff = createDSpinBox(0.0, 1.0, 0.05)
         intenCoeff = QHBoxLayout()
         intenCoeff.addWidget(self.diffuseIntensityBlue)
@@ -321,7 +355,7 @@ class GLWindow(QtWidgets.QMainWindow):
         specularTitle = QLabel("specular")
         specularWidgetsLayout = QVBoxLayout()
         # specular red
-        self.specularIntensityRed = createDSpinBox(0.0, 255.0, 0.5, 255.0)
+        self.specularIntensityRed = createDSpinBox(0.0, 1.0, 0.01, 1.0)
         self.specularIntensityRedCoeff = createDSpinBox(0.0, 1.0, 0.05)
         intenCoeff = QHBoxLayout()
         intenCoeff.addWidget(self.specularIntensityRed)
@@ -333,7 +367,7 @@ class GLWindow(QtWidgets.QMainWindow):
         specularWidgetsLayout.addLayout(channelLayout)
         # end specular red
         # specular green
-        self.specularIntensityGreen = createDSpinBox(0.0, 255.0, 0.5, 255.0)
+        self.specularIntensityGreen = createDSpinBox(0.0, 1.0, 0.01, 1.0)
         self.specularIntensityGreenCoeff = createDSpinBox(0.0, 1.0, 0.05)
         intenCoeff = QHBoxLayout()
         intenCoeff.addWidget(self.specularIntensityGreen)
@@ -345,7 +379,7 @@ class GLWindow(QtWidgets.QMainWindow):
         specularWidgetsLayout.addLayout(channelLayout)
         # end specular green
         # specular blue
-        self.specularIntensityBlue = createDSpinBox(0.0, 255.0, 0.5, 255.0)
+        self.specularIntensityBlue = createDSpinBox(0.0, 1.0, 0.01, 1.0)
         self.specularIntensityBlueCoeff = createDSpinBox(0.0, 1.0, 0.05)
         intenCoeff = QHBoxLayout()
         intenCoeff.addWidget(self.specularIntensityBlue)

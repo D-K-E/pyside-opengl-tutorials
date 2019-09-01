@@ -1,7 +1,8 @@
-#version 420 core
+#version 330 core
 
-varying mediump vec4 vertexColor;
+in mediump vec4 vertexColor;
+out vec4 FragColor;
 
 void main() {
-    gl_FragColor = vertexColor;
+    FragColor = vertexColor;
 }

@@ -1,7 +1,7 @@
+#version 330 core
+in highp vec3 aPos;
 
-attribute highp vec3 aPos;
-
-varying mediump vec4 vertexColor;
+out mediump vec4 vertexColor;
 
 void main() {
     gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);

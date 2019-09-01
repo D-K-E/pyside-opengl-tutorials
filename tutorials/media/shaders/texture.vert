@@ -1,7 +1,8 @@
-attribute highp vec3 aPos;
-attribute highp vec2 aTexCoord;
+#version 330 core
+in highp vec3 aPos;
+in highp vec2 aTexCoord;
 
-varying highp vec2 TexCoord;
+out highp vec2 TexCoord;
 
 void main(void)
 {

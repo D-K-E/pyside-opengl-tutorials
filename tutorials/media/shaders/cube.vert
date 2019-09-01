@@ -1,11 +1,12 @@
-attribute highp vec3 aPos;
-attribute mediump vec2 aTexCoord;
+#version 330 core
+in highp vec3 aPos;
+in mediump vec2 aTexCoord;
 
 uniform highp mat4 view;
 uniform highp mat4 model;
 uniform highp mat4 projection;
 
-varying mediump vec2 TexCoord;
+out mediump vec2 TexCoord;
 
 void main(void)
 {

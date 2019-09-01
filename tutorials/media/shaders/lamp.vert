@@ -1,4 +1,5 @@
-attribute mediump vec3 aPos;
+#version 330 core
+in mediump vec3 aPos;
 
 uniform mediump mat4 view;
 uniform mediump mat4 projection;
