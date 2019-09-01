@@ -403,15 +403,15 @@ class LightsGL(QOpenGLWidget):
                                      self.lamp.position)
         self.program.setUniformValue("light.direction",
                                      self.lamp.direction)
-        self.program.setUniformValue("light.ambient",
+        self.program.setUniformValue("light.ambientIntensity",
                                      self.lamp.ambient.intensity)
-        self.program.setUniformValue("light.diffuse",
+        self.program.setUniformValue("light.diffuseIntensity",
                                      self.lamp.diffuse.intensity)
         self.program.setUniformValue("coeffs.ambient",
                                      self.lamp.ambient.getCoeffAverage())
-        self.program.setUniformValue("coeffs.diffuse",
+        self.program.setUniformValue("material.diffuse",
                                      self.lamp.diffuse.getCoeffAverage())
-        self.program.setUniformValue("coeffs.specular",
+        self.program.setUniformValue("material.specular",
                                      self.lamp.specular.getCoeffAverage())
         self.program.setUniformValue("coeffs.lightCutOff",
                                      self.lamp.cutOff)
@@ -421,7 +421,7 @@ class LightsGL(QOpenGLWidget):
                                      self.lamp.attenuation.y())
         self.program.setUniformValue("coeffs.attrQuadratic",
                                      self.lamp.attenuation.z())
-        self.program.setUniformValue("viewerPosition", self.camera.position)
+        self.program.setUniformValue("viewerPosition", self.camera.front)
         # end fragment shader
         return
 

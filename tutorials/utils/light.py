@@ -269,7 +269,7 @@ class QtLightSource(PureLightSource):
     def setIntensity(self, **kwargs):
         "Set channel intensity to val"
         if "vec" in kwargs:
-            self.intensity = vec
+            self.intensity = kwargs['vec']
             self.setColor()
             return
 

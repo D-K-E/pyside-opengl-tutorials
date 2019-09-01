@@ -40,25 +40,25 @@ uniform Coefficients coeffs;
 uniform mediump vec3 viewerPosition;
 
 void main(void) {
-  vec3 objDiffuseColor = texture(material.diffuseMap, TexCoords).rgb;
-  vec3 objSpecularColor = texture(material.specularMap, TexCoords).rgb;
+  vec3 objDiffuseColor = light.diffuseIntensity * texture(material.diffuseMap, TexCoords).rgb;
+  vec3 objSpecularColor = light.diffuseIntensity * texture(material.specularMap, TexCoords).rgb;
   // ambient term I_a × k_a × O_d
   // I_a: ambient light intensity
   // k_a: ambient light coefficient
   // O_d: object's diffuse Color
-  vec3 ambientTerm = light.ambient * objDiffuseColor * coeffs.ambient;
+  vec3 ambientTerm = light.ambientIntensity * objDiffuseColor * coeffs.ambient;
 
   vec3 lightDirection = normalize(light.position - FragPos);
 
   float theta = dot(lightDirection, normalize(-light.direction));
-
+  if (theta > coeffs.lightCutOff){
     // lambertian terms k_d * O_d * (N \cdot L)
     // k_d: object diffuse reflection coefficient
     // N: normal to surface
     // L: direction of the light source
     // (N \cdot L): costheta
     vec3 norm = normalize(Normal);
-    float costheta = dot(norm, lightDirection);
+    float costheta = dot(lightDirection, norm);
     costheta = max(costheta, 0.0);
     vec3 lambertianTerm = costheta * material.diffuse * objDiffuseColor;
 
@@ -75,7 +75,7 @@ void main(void) {
     vec3 reflection =  reflect(-lightDirection, norm);
     reflection = normalize(reflection);
     float theta2 = dot(reflection, viewerDirection);
-    vec3 specularTerm = coeffs.specular * objSpecularColor * pow(theta2, 
+    vec3 specularTerm = material.specular * objSpecularColor * pow(theta2, 
     material.shininess);
 
     // attenuation term f_att
@@ -88,8 +88,11 @@ void main(void) {
     // f_att * I_p * (lambertianTerm + specularTerm)
     // I_p: light source intensity
     vec3 secondTerm = specularTerm + lambertianTerm;
-    secondTerm = secondTerm * attenuation * light.diffuse;
+    secondTerm = secondTerm * attenuation * light.diffuseIntensity;
 
     vec3 result = ambientTerm + secondTerm;
     FragColor = vec4(result, 1.0);
+  }else{
+    FragColor = vec4(light.ambientIntensity * objDiffuseColor, 1.0);
+      }
 }
