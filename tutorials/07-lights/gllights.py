@@ -65,7 +65,7 @@ class LightsGL(QOpenGLWidget):
         mediaDir = os.path.join(tutoPardir, "media")
         shaderDir = os.path.join(mediaDir, "shaders")
 
-        availableShaders = ["light", "lamp"]
+        availableShaders = ["simpleLight", "lamp"]
         self.shaders = {
             name: {
                 "fragment": os.path.join(shaderDir, name + ".frag"),
@@ -403,11 +403,11 @@ class LightsGL(QOpenGLWidget):
                                      self.lamp.position)
         self.program.setUniformValue("light.direction",
                                      self.lamp.direction)
-        self.program.setUniformValue("light.ambientColor",
+        self.program.setUniformValue("light.ambient",
                                      self.lamp.ambient.color)
-        self.program.setUniformValue("light.diffuseColor",
+        self.program.setUniformValue("light.diffuse",
                                      self.lamp.diffuse.color)
-        self.program.setUniformValue("light.specularColor",
+        self.program.setUniformValue("light.specular",
                                      self.lamp.specular.color)
         #
         # self.program.setUniformValue("light.diffuseColor",
@@ -416,15 +416,15 @@ class LightsGL(QOpenGLWidget):
         #                              QVector3D(1.0, 1.0, 1.0)
         #                              )
         #
-        self.program.setUniformValue("coeffs.lightCutOff",
+        self.program.setUniformValue("light.cutOff",
                                      self.lamp.cutOff)
-        self.program.setUniformValue("coeffs.attrConstant",
+        self.program.setUniformValue("coeffs.constant",
                                      self.lamp.attenuation.x())
-        self.program.setUniformValue("coeffs.attrLinear",
+        self.program.setUniformValue("coeffs.linear",
                                      self.lamp.attenuation.y())
-        self.program.setUniformValue("coeffs.attrQuadratic",
+        self.program.setUniformValue("coeffs.quadratic",
                                      self.lamp.attenuation.z())
-        self.program.setUniformValue("viewerPosition",
+        self.program.setUniformValue("viewPos",
                                      self.camera.position)
         # end fragment shader
         return
@@ -556,7 +556,7 @@ class LightsGL(QOpenGLWidget):
 
         # cube shader
         self.program = QOpenGLShaderProgram(self.context)
-        shaderName = "light"
+        shaderName = "simpleLight"
         vshader = self.loadVertexShader(shaderName)
         fshader = self.loadFragmentShader(shaderName)
         attrLocs = {"aPos": 0, "aNormal": 1, "aTexCoord": 2}
@@ -567,8 +567,8 @@ class LightsGL(QOpenGLWidget):
         # drawing since we are handling events as well but we should set
         # those that are related material right away
         print("program uniform initialize")
-        self.program.setUniformValue("material.diffuseMap", self.texUnit1)
-        self.program.setUniformValue("material.specularMap", self.texUnit2)
+        self.program.setUniformValue("material.diffuse", self.texUnit1)
+        self.program.setUniformValue("material.specular", self.texUnit2)
         print("program uniform initialize end")
         # end cube shader
         # end shaders
