@@ -66,8 +66,8 @@ void main(void) {
     // ambient  *= attenuation; // remove attenuation from ambient, as otherwise
     // at large distances the light would be darker inside than outside the
     // spotlight due the ambient term in the else branche
-    diffuse *= attenuation;
-    specular *= attenuation;
+    //diffuse *= attenuation;
+    //specular *= attenuation;
 
     vec3 result = ambient + diffuse + specular;
     FragColor = vec4(result, 1.0);

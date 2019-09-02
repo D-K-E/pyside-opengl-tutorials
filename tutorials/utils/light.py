@@ -57,7 +57,7 @@ class PureLightSource:
             # data taken on 2019-08-30 from
             # https://learnopengl.com/Lighting/Light-casters
             # distance, attenConst, attenLin, attenQaud
-            [7, 1.0, 0.7, 1.8],
+            [7, 1.0, 0.14, 0.07],
             [13, 1.0, 0.35, 0.44],
             [20, 1.0, 0.22, 0.20],
             [32, 1.0, 0.14, 0.07],
@@ -199,7 +199,7 @@ class QtLightSource(PureLightSource):
                  coefficients=QVector3D(1.0,
                                         1.0,
                                         1.0),
-                 attenuation=QVector3D(1.0, 0.7, 1.8),
+                 attenuation=QVector3D(1.0, 0.14, 0.07),
                  cutOff=12.5
                  ):
         ""
@@ -609,7 +609,7 @@ class QtShaderLight(PureShaderLight):
                  position=QVector3D(0.0, 1.0, 0.0),
                  direction=QVector3D(0.0, -1.0, -0.1),
                  cutOff=math.cos(math.radians(12.5)),
-                 attenuation=QVector3D(1.0, 0.7, 1.8),
+                 attenuation=QVector3D(1.0, 0.14, 1.8),
                  ambient=QtLightSource(),
                  diffuse=QtLightSource(),
                  specular=QtLightSource()):
