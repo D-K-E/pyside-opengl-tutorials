@@ -40,7 +40,7 @@ class LightsAppWindow(AppWindow):
         self.lightRotZSlider.valueChanged.connect(self.rotateLights)
         #
         self.angleSpin.valueChanged.connect(self.setAngle)
-        self.cutOff.valueChanged.connect(self.setCutOff)
+        self.cutOffSpin.valueChanged.connect(self.setCutOff)
         self.shininessSpin.valueChanged.connect(self.setShininess)
         #
         self.lastCamXVal = self.camX.value()
@@ -61,9 +61,9 @@ class LightsAppWindow(AppWindow):
             self.changeAmbientIntensity)
         self.ambientIntensityRedCoeff.valueChanged.connect(
             self.changeAmbientCoeff)
-        self.ambientIntensityBlue.valueChanged.connect(
+        self.ambientIntensityGreen.valueChanged.connect(
             self.changeAmbientIntensity)
-        self.ambientIntensityBlueCoeff.valueChanged.connect(
+        self.ambientIntensityGreenCoeff.valueChanged.connect(
             self.changeAmbientCoeff)
         #
         # set specular color
@@ -142,7 +142,7 @@ class LightsAppWindow(AppWindow):
         self.glWidget.changeShininess(shin)
 
     def setCutOff(self):
-        coff = self.cutOff.value()
+        coff = self.cutOffSpin.value()
         self.glWidget.setCutOff(coff)
 
     def setAngle(self):

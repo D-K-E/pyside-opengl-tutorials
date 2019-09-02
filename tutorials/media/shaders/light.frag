@@ -9,8 +9,6 @@ struct Material {
   sampler2D diffuseMap;  // object picture
   sampler2D specularMap; // normal map
   float shininess;
-  float diffuse;
-  float specular;
 };
 
 uniform Material material;
@@ -19,17 +17,15 @@ struct SpotLight {
   highp vec3 position;
   highp vec3 direction;
 
-  highp vec3 ambientIntensity;
-  highp vec3 diffuseIntensity;
+  highp vec3 ambientColor;
+  highp vec3 diffuseColor;
+  highp vec3 specularColor;
 };
 
 uniform SpotLight light;
 
 struct Coefficients {
   float lightCutOff;
-
-  float ambient;
-
   float attrConstant;
   float attrLinear;
   float attrQuadratic;
@@ -40,59 +36,46 @@ uniform Coefficients coeffs;
 uniform mediump vec3 viewerPosition;
 
 void main(void) {
-  vec3 objDiffuseColor = light.diffuseIntensity * texture(material.diffuseMap, TexCoords).rgb;
-  vec3 objSpecularColor = light.diffuseIntensity * texture(material.specularMap, TexCoords).rgb;
-  // ambient term I_a × k_a × O_d
-  // I_a: ambient light intensity
-  // k_a: ambient light coefficient
-  // O_d: object's diffuse Color
-  vec3 ambientTerm = light.ambientIntensity * objDiffuseColor * coeffs.ambient;
+    vec3 lightDirection = normalize(light.position - FragPos);
+    vec3 texDiffuse = texture(material.diffuseMap, TexCoords).rgb;
+    vec3 specText = texture(material.specularMap, TexCoords).rgb;
+    vec3 ambient = light.ambientColor * texDiffuse;
 
-  vec3 lightDirection = normalize(light.position - FragPos);
+    // in spot or not
+    float checkValue = dot(lightDirection, normalize(-light.direction));
+    if (checkValue > coeffs.lightCutOff)
+    {
+        // ambient Color
 
-  float theta = dot(lightDirection, normalize(-light.direction));
-  if (theta > coeffs.lightCutOff){
-    // lambertian terms k_d * O_d * (N \cdot L)
-    // k_d: object diffuse reflection coefficient
-    // N: normal to surface
-    // L: direction of the light source
-    // (N \cdot L): costheta
-    vec3 norm = normalize(Normal);
-    float costheta = dot(lightDirection, norm);
-    costheta = max(costheta, 0.0);
-    vec3 lambertianTerm = costheta * material.diffuse * objDiffuseColor;
+        // diffuse color
+        vec3 norm = normalize(Normal);
+        float costheta = max(dot(norm, lightDirection), 0.0);
+        vec3 diffuse = light.diffuseColor * costheta * texture(material.diffuseMap, TexCoords).rgb;
 
-    // expanding lambertian to phong
+        // specular color
+        vec3 viewerDirection = normalize(viewerPosition - FragPos);
+        vec3 reflectionDirection = reflect(-lightDirection, norm);
+        float specAngle = max(dot(viewerDirection, reflectionDirection), 0.0);
+        specAngle = pow(specAngle, material.shininess);
+        vec3 specular = light.specularColor * texture(material.specularMap, TexCoords).rgb * specAngle;
 
-    // specular term k_s * O_s * (R \cdot V)^n
-    // k_s: object specular coefficient
-    // O_s: object specular color
-    // R: reflection vector for direction of reflection
-    // V: viewpoint or viewer direction
-    // n: shininess
-    vec3 viewerDirection = normalize(viewerPosition - FragPos);
-    // R = 2 N * (N \cdot L) - L
-    vec3 reflection =  reflect(-lightDirection, norm);
-    reflection = normalize(reflection);
-    float theta2 = dot(reflection, viewerDirection);
-    vec3 specularTerm = material.specular * objSpecularColor * pow(theta2, 
-    material.shininess);
+        // attenuation
+        float dist = length(light.position - FragPos);
+        float attenDist = coeffs.attrLinear * dist;
+        attenDist = attenDist + coeffs.attrQuadratic * (dist * dist);
+        attenDist = attenDist + coeffs.attrConstant;
+        float attenuation = 1.0 / attenDist;
 
-    // attenuation term f_att
-    float dist = length(light.position - FragPos);
-    float attrQuad = coeffs.attrQuadratic * (dist * dist);
-    float attrLinear = coeffs.attrLinear * dist;
-    float attr = coeffs.attrConstant + attrQuad + attrLinear;
-    float attenuation = min(1.0 / attr, 1.0);
+        //
+        diffuse = diffuse * attenuation;
+        specular = specular * attenuation;
 
-    // f_att * I_p * (lambertianTerm + specularTerm)
-    // I_p: light source intensity
-    vec3 secondTerm = specularTerm + lambertianTerm;
-    secondTerm = secondTerm * attenuation * light.diffuseIntensity;
-
-    vec3 result = ambientTerm + secondTerm;
-    FragColor = vec4(result, 1.0);
-  }else{
-    FragColor = vec4(light.ambientIntensity * objDiffuseColor, 1.0);
-      }
+        vec3 result = ambient + diffuse + specular;
+        FragColor = vec4(result, 1.0);
+    }
+    else
+    {
+        FragColor = vec4(ambient, 1.0);
+    }
 }
+

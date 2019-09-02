@@ -75,10 +75,10 @@ class LightsGL(QOpenGLWidget):
         self.core = "--coreprofile" in QCoreApplication.arguments()
         imdir = os.path.join(mediaDir, "images")
         imFName = "im"
-        imageFile1 = os.path.join(imdir, imFName + "2.png")
+        imageFile1 = os.path.join(imdir, imFName + "3.png")
         cropRect = QRect(0, 0, 500, 500)
         self.image1 = QImage(imageFile1).mirrored()
-        normalMap = os.path.join(imdir, "nmap.png")
+        normalMap = os.path.join(imdir, "im3.png")
         self.nmap = QImage(normalMap)
         self.image1 = self.image1.copy(cropRect)
         self.nmap = self.nmap.copy(cropRect)
@@ -355,7 +355,7 @@ class LightsGL(QOpenGLWidget):
                                  colorType=colorType)
         self.update()
 
-    def setCutOff(self, val):
+    def setCutOff(self, val: float):
         self.lamp.setCutOff(val)
         self.update()
 
@@ -403,16 +403,19 @@ class LightsGL(QOpenGLWidget):
                                      self.lamp.position)
         self.program.setUniformValue("light.direction",
                                      self.lamp.direction)
-        self.program.setUniformValue("light.ambientIntensity",
-                                     self.lamp.ambient.intensity)
-        self.program.setUniformValue("light.diffuseIntensity",
-                                     self.lamp.diffuse.intensity)
-        self.program.setUniformValue("coeffs.ambient",
-                                     self.lamp.ambient.getCoeffAverage())
-        self.program.setUniformValue("material.diffuse",
-                                     self.lamp.diffuse.getCoeffAverage())
-        self.program.setUniformValue("material.specular",
-                                     self.lamp.specular.getCoeffAverage())
+        self.program.setUniformValue("light.ambientColor",
+                                     self.lamp.ambient.color)
+        self.program.setUniformValue("light.diffuseColor",
+                                     self.lamp.diffuse.color)
+        self.program.setUniformValue("light.specularColor",
+                                     self.lamp.specular.color)
+        #
+        # self.program.setUniformValue("light.diffuseColor",
+        #                              QVector3D(0.5, 0.5, 0.5))
+        # self.program.setUniformValue("light.specularColor",
+        #                              QVector3D(1.0, 1.0, 1.0)
+        #                              )
+        #
         self.program.setUniformValue("coeffs.lightCutOff",
                                      self.lamp.cutOff)
         self.program.setUniformValue("coeffs.attrConstant",
@@ -421,7 +424,8 @@ class LightsGL(QOpenGLWidget):
                                      self.lamp.attenuation.y())
         self.program.setUniformValue("coeffs.attrQuadratic",
                                      self.lamp.attenuation.z())
-        self.program.setUniformValue("viewerPosition", self.camera.front)
+        self.program.setUniformValue("viewerPosition",
+                                     self.camera.position)
         # end fragment shader
         return
 
@@ -477,7 +481,7 @@ class LightsGL(QOpenGLWidget):
         self.program.addShader(vshader)
         self.program.addShader(fshader)
         self.program.bindAttributeLocation(
-            "aPos", 0)
+            "aPos", attrLocs["aPos"])
         self.program.bindAttributeLocation(
             "aNormal", attrLocs['aNormal'])
         self.program.bindAttributeLocation(

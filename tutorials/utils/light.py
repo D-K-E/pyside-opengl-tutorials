@@ -7,6 +7,8 @@ from PySide2.QtGui import QVector3D
 from tutorials.utils.utils import normalize_tuple
 from tutorials.utils.utils import vec2vecDot
 from tutorials.utils.utils import crossProduct
+from tutorials.utils.utils import computeFrontRightPure
+from tutorials.utils.utils import computeFrontRightQt
 
 
 class PureLightSource:
@@ -19,7 +21,7 @@ class PureLightSource:
                  dirx=0.0,
                  diry=-1.0,
                  dirz=-0.1,
-                 cutOff=math.cos(math.radians(12.5)),
+                 cutOff=12.5,
                  attenuationConstant=1.0,
                  attenuationLinear=0.7,
                  attenuationQuadratic=1.8,
@@ -198,7 +200,7 @@ class QtLightSource(PureLightSource):
                                         1.0,
                                         1.0),
                  attenuation=QVector3D(1.0, 0.7, 1.8),
-                 cutOff=math.cos(math.radians(12.5))
+                 cutOff=12.5
                  ):
         ""
         super().__init__(
@@ -454,7 +456,11 @@ class PureShaderLight:
                  attenuationLinear=0.7,
                  attenuationQuadratic=1.8,
                  cutOff=math.cos(math.radians(12.5)),
-                 ambient=PureLightSource(),
+                 ambient=PureLightSource(
+                     intensityRedCoeff=0.3,
+                     intensityGreenCoeff=0.3,
+                     intensityBlueCoeff=0.3
+                 ),
                  diffuse=PureLightSource(),
                  specular=PureLightSource()):
         ""

@@ -262,7 +262,7 @@ class GLWindow(QtWidgets.QMainWindow):
         ambientWidgetsLayout = QVBoxLayout()
         # ambient red
         self.ambientIntensityRed = createDSpinBox(0.0, 1.0, 0.01, 1.0)
-        self.ambientIntensityRedCoeff = createDSpinBox(0.0, 1.0, 0.05)
+        self.ambientIntensityRedCoeff = createDSpinBox(0.0, 1.0, 0.05, 0.3)
         intenCoeff = QHBoxLayout()
         intenCoeff.addWidget(self.ambientIntensityRed)
         intenCoeff.addWidget(self.ambientIntensityRedCoeff)
@@ -274,7 +274,7 @@ class GLWindow(QtWidgets.QMainWindow):
         # end ambient red
         # ambient green
         self.ambientIntensityGreen = createDSpinBox(0.0, 1.0, 0.01, 1.0)
-        self.ambientIntensityGreenCoeff = createDSpinBox(0.0, 1.0, 0.05)
+        self.ambientIntensityGreenCoeff = createDSpinBox(0.0, 1.0, 0.05, 0.3)
         intenCoeff = QHBoxLayout()
         intenCoeff.addWidget(self.ambientIntensityGreen)
         intenCoeff.addWidget(self.ambientIntensityGreenCoeff)
@@ -286,7 +286,7 @@ class GLWindow(QtWidgets.QMainWindow):
         # end ambient green
         # ambient blue
         self.ambientIntensityBlue = createDSpinBox(0.0, 1.0, 0.01, 1.0)
-        self.ambientIntensityBlueCoeff = createDSpinBox(0.0, 1.0, 0.05)
+        self.ambientIntensityBlueCoeff = createDSpinBox(0.0, 1.0, 0.05, 0.3)
         intenCoeff = QHBoxLayout()
         intenCoeff.addWidget(self.ambientIntensityBlue)
         intenCoeff.addWidget(self.ambientIntensityBlueCoeff)
@@ -321,7 +321,7 @@ class GLWindow(QtWidgets.QMainWindow):
         # end diffuse red
         # diffuse green
         self.diffuseIntensityGreen = createDSpinBox(0.0, 1.0, 0.01, 1.0)
-        self.diffuseIntensityGreenCoeff = createDSpinBox(0.0, 1.0, 0.05)
+        self.diffuseIntensityGreenCoeff = createDSpinBox(0.0, 1.0, 0.05, 0.5)
         intenCoeff = QHBoxLayout()
         intenCoeff.addWidget(self.diffuseIntensityGreen)
         intenCoeff.addWidget(self.diffuseIntensityGreenCoeff)
@@ -333,7 +333,7 @@ class GLWindow(QtWidgets.QMainWindow):
         # end diffuse green
         # diffuse blue
         self.diffuseIntensityBlue = createDSpinBox(0.0, 1.0, 0.01, 1.0)
-        self.diffuseIntensityBlueCoeff = createDSpinBox(0.0, 1.0, 0.05)
+        self.diffuseIntensityBlueCoeff = createDSpinBox(0.0, 1.0, 0.05, 0.5)
         intenCoeff = QHBoxLayout()
         intenCoeff.addWidget(self.diffuseIntensityBlue)
         intenCoeff.addWidget(self.diffuseIntensityBlueCoeff)
@@ -356,7 +356,7 @@ class GLWindow(QtWidgets.QMainWindow):
         specularWidgetsLayout = QVBoxLayout()
         # specular red
         self.specularIntensityRed = createDSpinBox(0.0, 1.0, 0.01, 1.0)
-        self.specularIntensityRedCoeff = createDSpinBox(0.0, 1.0, 0.05)
+        self.specularIntensityRedCoeff = createDSpinBox(0.0, 1.0, 0.05, 1.0)
         intenCoeff = QHBoxLayout()
         intenCoeff.addWidget(self.specularIntensityRed)
         intenCoeff.addWidget(self.specularIntensityRedCoeff)
@@ -368,7 +368,7 @@ class GLWindow(QtWidgets.QMainWindow):
         # end specular red
         # specular green
         self.specularIntensityGreen = createDSpinBox(0.0, 1.0, 0.01, 1.0)
-        self.specularIntensityGreenCoeff = createDSpinBox(0.0, 1.0, 0.05)
+        self.specularIntensityGreenCoeff = createDSpinBox(0.0, 1.0, 0.05, 1.0)
         intenCoeff = QHBoxLayout()
         intenCoeff.addWidget(self.specularIntensityGreen)
         intenCoeff.addWidget(self.specularIntensityGreenCoeff)
@@ -380,7 +380,7 @@ class GLWindow(QtWidgets.QMainWindow):
         # end specular green
         # specular blue
         self.specularIntensityBlue = createDSpinBox(0.0, 1.0, 0.01, 1.0)
-        self.specularIntensityBlueCoeff = createDSpinBox(0.0, 1.0, 0.05)
+        self.specularIntensityBlueCoeff = createDSpinBox(0.0, 1.0, 0.05, 1.0)
         intenCoeff = QHBoxLayout()
         intenCoeff.addWidget(self.specularIntensityBlue)
         intenCoeff.addWidget(self.specularIntensityBlueCoeff)
@@ -455,9 +455,9 @@ class GLWindow(QtWidgets.QMainWindow):
         # cut off
         cutOffTitle = QLabel("Cut Off")
         cutOffLayout = QVBoxLayout()
-        self.cutOff = createDSpinBox(0.1, 45.0, 0.1)
+        self.cutOffSpin = createDSpinBox(0.1, 520.0, 0.1)
         cutOffLayout.addWidget(cutOffTitle)
-        cutOffLayout.addWidget(self.cutOff)
+        cutOffLayout.addWidget(self.cutOffSpin)
         #
         otherLayout.addLayout(cutOffLayout)
         # end cut off
