@@ -2,7 +2,7 @@
 
 from PySide2 import QtWidgets
 from tutorials.utils.window import GLWindow as AppWindow
-from gllights import LightsGL
+from glmlights import LightsGL
 import sys
 
 

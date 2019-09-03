@@ -65,7 +65,7 @@ class LightsGL(QOpenGLWidget):
         mediaDir = os.path.join(tutoPardir, "media")
         shaderDir = os.path.join(mediaDir, "shaders")
 
-        availableShaders = ["simpleLight", "lamp"]
+        availableShaders = ["simpleLight", "lamp", "light"]
         self.shaders = {
             name: {
                 "fragment": os.path.join(shaderDir, name + ".frag"),
@@ -408,13 +408,7 @@ class LightsGL(QOpenGLWidget):
         self.program.setUniformValue("light.diffuse",
                                      self.lamp.diffuse.color)
         self.program.setUniformValue("light.specular",
-                                     self.lamp.specular.color)
-        #
-        # self.program.setUniformValue("light.diffuseColor",
-        #                              QVector3D(0.5, 0.5, 0.5))
-        # self.program.setUniformValue("light.specularColor",
-        #                              QVector3D(1.0, 1.0, 1.0)
-        #                              )
+                                     self.lamp.diffuse.color)
         #
         self.program.setUniformValue("light.cutOff",
                                      self.lamp.cutOff)

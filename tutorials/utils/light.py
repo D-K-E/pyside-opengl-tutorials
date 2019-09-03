@@ -22,6 +22,7 @@ class PureLightSource:
                  diry=-1.0,
                  dirz=-0.1,
                  cutOff=12.5,
+                 outerCutOff=15.5,
                  attenuationConstant=1.0,
                  attenuationLinear=0.7,
                  attenuationQuadratic=1.8,
@@ -49,7 +50,8 @@ class PureLightSource:
             "g": intensityGreen * intensityGreenCoeff,
             "b": intensityBlue * intensityBlueCoeff
         }
-        self.cutOff = cutOff
+        self.cutOff = math.cos(math.radians(cutOff))
+        self.outerCutOff = math.cos(math.radians(outerCutOff))
         self.attenConst = attenuationConstant
         self.attenLinear = attenuationLinear
         self.attenQuad = attenuationQuadratic
@@ -168,6 +170,10 @@ class PureLightSource:
         ""
         self.cutOff = math.cos(math.radians(val))
 
+    def setOuterCutOff(self, val: float):
+        ""
+        self.outerCutOff = math.cos(math.radians(val))
+
     def getCoeffAverage(self):
         "Get the average value of its coefficients"
         red, green = self.coeffs['r'], self.coeffs['g']
@@ -178,13 +184,14 @@ class PureLightSource:
         ""
         mess = "Light Source:\n position {0},\n direction {1},\n intensity {2}"
         mess += ",\n coefficients {3},\n color {4},\n cutOff value {5}"
-        mess += ",\n attenuation constant {6},\n attenuation linear {7}"
+        mess += ",\n outerCutOff value {9}, attenuation constant {6},"
+        mess += "\n attenuation linear {7}"
         mess += ",\n attenuation quadratic {8}"
         return mess.format(str(self.position), str(self.direction),
                            str(self.intensity), str(self.coeffs),
                            str(self.color), str(self.cutOff),
                            str(self.attenConst), str(self.attenLinear),
-                           str(self.attenQuad))
+                           str(self.attenQuad), str(self.outerCutOff))
 
 
 class QtLightSource(PureLightSource):
@@ -200,7 +207,8 @@ class QtLightSource(PureLightSource):
                                         1.0,
                                         1.0),
                  attenuation=QVector3D(1.0, 0.14, 0.07),
-                 cutOff=12.5
+                 cutOff=12.5,
+                 outerCutOff=15.0
                  ):
         ""
         super().__init__(
@@ -227,7 +235,8 @@ class QtLightSource(PureLightSource):
         self.intensity = intensity
         self.coeffs = coefficients
         self.setColor()
-        self.cutOff = cutOff
+        self.cutOff = math.cos(math.radians(cutOff))
+        self.outerCutOff = math.cos(math.radians(outerCutOff))
         self.attenuation = attenuation
 
     def setAttenuationByTableVals(self, index: int):
@@ -455,7 +464,8 @@ class PureShaderLight:
                  attenuationConstant=1.0,
                  attenuationLinear=0.7,
                  attenuationQuadratic=1.8,
-                 cutOff=math.cos(math.radians(12.5)),
+                 cutOff=12.5,
+                 outerCutOff=15.0,
                  ambient=PureLightSource(
                      intensityRedCoeff=0.3,
                      intensityGreenCoeff=0.3,
@@ -488,7 +498,8 @@ class PureShaderLight:
             aLin=attenuationLinear,
             aQuad=attenuationQuadratic)
         self.specular = specular
-        self.cutOff = cutOff
+        self.cutOff = math.cos(math.radians(cutOff))
+        self.outerCutOff = math.cos(math.radians(outerCutOff))
         self.specular.setCutOff(cutOff)
         self.diffuse.setCutOff(cutOff)
 
@@ -539,6 +550,12 @@ class PureShaderLight:
         self.cutOff = math.cos(math.radians(val))
         self.diffuse.setCutOff(val)
         self.specular.setCutOff(val)
+
+    def setOuterCutOff(self, val: float):
+        ""
+        self.outerCutOff = math.cos(math.radians(val))
+        self.diffuse.setOuterCutOff(val)
+        self.specular.setOuterCutOff(val)
 
     def setIntensity(self,
                      colorType="all",
@@ -593,13 +610,14 @@ class PureShaderLight:
         "string representation"
         mess = "Shader Light:\n position {0},\n direction {1},\n ambient {2}"
         mess += ",\n diffuse {3},\n specular {4},\n cut off {5}"
-        mess += ",\n attenuation constant {6},\n attenuation linear {7}"
+        mess += ",\n outerCutOff value {9}, attenuation constant {6},"
+        mess += "\n attenuation linear {7}"
         mess += ",\n attenuation quadratic {8}"
         return mess.format(str(self.position), str(self.direction),
                            str(self.ambient), str(self.diffuse),
                            str(self.specular), str(self.cutOff),
                            str(self.attenConst), str(self.attenLinear),
-                           str(self.attenQuad))
+                           str(self.attenQuad), str(self.outerCutOff))
 
 
 class QtShaderLight(PureShaderLight):
@@ -609,6 +627,7 @@ class QtShaderLight(PureShaderLight):
                  position=QVector3D(0.0, 1.0, 0.0),
                  direction=QVector3D(0.0, -1.0, -0.1),
                  cutOff=math.cos(math.radians(12.5)),
+                 outerCutOff=math.cos(math.radians(15.0)),
                  attenuation=QVector3D(1.0, 0.14, 1.8),
                  ambient=QtLightSource(),
                  diffuse=QtLightSource(),
@@ -632,6 +651,7 @@ class QtShaderLight(PureShaderLight):
         self.position = position
         self.direction = direction
         self.cutOff = cutOff
+        self.outerCutOff = outerCutOff
         self.ambient = ambient
         #
         self.diffuse = diffuse

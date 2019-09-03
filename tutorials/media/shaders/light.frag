@@ -64,7 +64,7 @@ void main(void) {
         float attenDist = coeffs.attrLinear * dist;
         attenDist = attenDist + coeffs.attrQuadratic * (dist * dist);
         attenDist = attenDist + coeffs.attrConstant;
-        float attenuation = 1.0 / attenDist;
+        float attenuation = min(1.0 / attenDist, 1.0);
 
         //
         diffuse = diffuse * attenuation;
